@@ -30,9 +30,13 @@ fi
 echo "Fetching the latest changes from the remote repository..."
 git fetch origin
 
-# Try to merge the remote changes with --allow-unrelated-histories
+# Attempt to merge the remote changes, with error handling
 echo "Merging remote changes..."
-git merge origin/main --allow-unrelated-histories --no-edit
+if ! git merge origin/main --allow-unrelated-histories --no-edit; then
+    echo "Merge failed. Aborting the merge and reverting to a clean state."
+    git merge --abort
+    exit 1
+fi
 
 # Check for changes
 if [[ $(git status --porcelain) ]]; then
@@ -55,8 +59,6 @@ else
     echo "No changes detected. Nothing to commit."
 fi
 
-
-# #!/bin/bash
 
 # # Set the path to your project directory
 # PROJECT_DIR="/Users/robertkukufotock/Documents/METAWIRELESS/Research-Codes/spawc2024"
