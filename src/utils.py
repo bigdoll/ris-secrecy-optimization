@@ -2,17 +2,13 @@ import os
 import numpy as np
 from scipy.linalg import sqrtm
 from visualization import Plot3DPositions
-<<<<<<< HEAD
 from collections import defaultdict
 from typing import Tuple, Dict
 from typing import List, Dict, Any
-
-class Utils:
     
-=======
 
 class Utils:
->>>>>>> origin/main
+
     @staticmethod
     def check_file_exists(file_path):
         """
@@ -47,11 +43,7 @@ class Utils:
         """
         return os.path.join("./data/samples", file_name)
 
-<<<<<<< HEAD
-    # @staticmethod
-=======
     @staticmethod
->>>>>>> origin/main
     def check_channel_or_ris_file_exists(generate_samples_func):
         """
         Decorator to check if a channel or RIS file exists before generating samples.
@@ -77,7 +69,6 @@ class Utils:
             return samples
         return wrapper_generate_samples
 
-<<<<<<< HEAD
     # #@staticmethod
     # @check_channel_or_ris_file_exists
     # def monte_carlo_simulation(num_samples, filename, *args, **kwargs):
@@ -98,7 +89,7 @@ class Utils:
     #         # [Utils.generate_channels_algo1(*args, **kwargs) for _ in range(num_samples)]
     #     return Utils.create_object_array_from_tuples(channel_samples)
     
-=======
+
     @staticmethod
     @check_channel_or_ris_file_exists
     def monte_carlo_simulation(num_samples, filename, *args, **kwargs):
@@ -229,7 +220,6 @@ class Utils:
 
         return channel_G_B_lst, channel_gE_hat_lst, channel_gE_error_lst, channel_H_lst
 
->>>>>>> origin/main
     @staticmethod
     def create_object_array_from_tuples(channel_samples):
         """
@@ -245,7 +235,6 @@ class Utils:
         for i, sample in enumerate(channel_samples):
             samples_array[i] = sample
         return samples_array
-<<<<<<< HEAD
     
     @staticmethod
     @check_channel_or_ris_file_exists
@@ -544,8 +533,7 @@ class Utils:
     #         # sigma_e_sq_lst.append(sigma_e_sq)
 
     #     return channel_G_B_lst, channel_gE_lst, channel_gE_error_lst, channel_H_lst, sigma_e_sq 
-=======
->>>>>>> origin/main
+
 
     @staticmethod
     def dbm_to_watts(power_dbm):
@@ -770,11 +758,7 @@ class Utils:
         return sinr_a
 
     @staticmethod
-<<<<<<< HEAD
     def sinr_active_Eve(G, H, gamma, p, sigma_sq, sigma_RIS_sq, sigma_e_sq, scsi_bool):
-=======
-    def sinr_active_Eve(G, H, gamma, p, sigma_sq, sigma_RIS_sq, sigma_g_sq, scsi_bool):
->>>>>>> origin/main
         """
         Compute the SINR for Eve.
 
@@ -795,11 +779,9 @@ class Utils:
         K = p.shape[0]
         N = H.shape[0]
         sinr_a = np.zeros_like(p)
-<<<<<<< HEAD
+
         RE = G @ G.conj().T + scsi_bool * sigma_e_sq * np.eye(N)
-=======
-        RE = G @ G.conj().T + scsi_bool * sigma_g_sq * np.eye(N)
->>>>>>> origin/main
+
         for k in range(K):
             hk = H[:, k]
             Hk = np.diag(hk)
@@ -852,11 +834,7 @@ class Utils:
         return sinr_a
 
     @staticmethod
-<<<<<<< HEAD
     def SR_active_algo1(G, H, gamma, p, sigma_sq, sigma_RIS_sq, sigma_e_sq, scsi_bool, orig_bool, Rx):
-=======
-    def SR_active_algo1(G, H, gamma, p, sigma_sq, sigma_RIS_sq, sigma_g_sq, scsi_bool, orig_bool, Rx):
->>>>>>> origin/main
         """
         Compute the sum-rate for active RIS algorithm 1.
 
@@ -881,21 +859,14 @@ class Utils:
             sinr = Utils.sinr_active_Bob(C, G, H, gamma, p, sigma_sq, sigma_RIS_sq)
         else:
             if not orig_bool:
-<<<<<<< HEAD
                 sinr = Utils.sinr_active_Eve(G, H, gamma, p, sigma_sq, sigma_RIS_sq, sigma_e_sq, scsi_bool)
-=======
-                sinr = Utils.sinr_active_Eve(G, H, gamma, p, sigma_sq, sigma_RIS_sq, sigma_g_sq, scsi_bool)
->>>>>>> origin/main
+
             else:
                 sinr = Utils.sinr_active_Eve_orig(G, H, gamma, p, sigma_sq, sigma_RIS_sq)
         return sum(np.log2(1 + sinr[k]) for k in range(K))
 
     @staticmethod
-<<<<<<< HEAD
     def GEE_active_algo1(G, H, gamma, p, mu, Pc, sigma_sq, sigma_RIS_sq, sigma_e_sq, ris_state, scsi_bool, orig_bool, Rx):
-=======
-    def GEE_active_algo1(G, H, gamma, p, mu, Pc, sigma_sq, sigma_RIS_sq, sigma_g_sq, ris_state, scsi_bool, orig_bool, Rx):
->>>>>>> origin/main
         """
         Compute the generalized energy efficiency for active RIS algorithm 1.
 
@@ -917,11 +888,8 @@ class Utils:
         Returns:
         - float: Generalized energy efficiency.
         """
-<<<<<<< HEAD
         sr_algo1 = Utils.SR_active_algo1(G, H, gamma, p, sigma_sq, sigma_RIS_sq, sigma_e_sq, scsi_bool, orig_bool, Rx)
-=======
-        sr_algo1 = Utils.SR_active_algo1(G, H, gamma, p, sigma_sq, sigma_RIS_sq, sigma_g_sq, scsi_bool, orig_bool, Rx)
->>>>>>> origin/main
+
         R = Utils.compute_R(H, p, sigma_RIS_sq)
         Ptot = Utils.compute_Ptot_active_algo1(R, gamma, p, mu, Pc, ris_state)
         return sr_algo1 / Ptot
@@ -1039,7 +1007,6 @@ class Utils:
                 else:
                     combined_dict[key].append(value_list)
         return combined_dict
-<<<<<<< HEAD
     
 
 
@@ -1106,25 +1073,18 @@ class Utils:
 
     @staticmethod
     def average_values_by_key_equal_length(flattened_dict, num_samples):
-=======
-
-    @staticmethod
-    def average_values_by_key_equal_length(flattened_dict):
->>>>>>> origin/main
         """
         Average values by key in a flattened dictionary.
 
         Parameters:
         - flattened_dict (dict): Flattened dictionary.
-<<<<<<< HEAD
+
         - num_samples (int): Number of samples.
-=======
->>>>>>> origin/main
 
         Returns:
         - dict: Dictionary with averaged values.
         """
-<<<<<<< HEAD
+
         keys_to_average = {
             "sr_uniform_Bob_pcsi", "sr_uniform_Bob_scsi", "sr_uniform_Eve_pcsi",
             "sr_uniform_Eve_scsi", "ssr_uniform_pcsi", "ssr_uniform_scsi", "gee_uniform_Bob_pcsi", "gee_uniform_Bob_scsi",
@@ -1260,16 +1220,14 @@ class Utils:
         
         return averaged_results
 
-=======
-        avg_dict = {}
-        for key, value_lists in flattened_dict.items():
-            num_lists = len(value_lists)
-            zipped_values = zip(*value_lists)
-            avg_list = [sum(values) / num_lists for values in zipped_values]
-            avg_dict[key] = avg_list
-        return avg_dict
-
->>>>>>> origin/main
+        # avg_dict = {}
+        # for key, value_lists in flattened_dict.items():
+        #     num_lists = len(value_lists)
+        #     zipped_values = zip(*value_lists)
+        #     avg_list = [sum(values) / num_lists for values in zipped_values]
+        #     avg_dict[key] = avg_list
+        # return avg_dict
+        
     @staticmethod
     def load_and_access_results(file_path):
         """
@@ -1415,11 +1373,7 @@ class Utils:
         return 10 ** (shadowing_db / 10)
 
     @staticmethod
-<<<<<<< HEAD
     def generate_positions(K, r_cell, h_BS, h_RIS, hmin_UE, hmax_UE,  Rn_B, Rn_RIS, vic_percent_eve):
-=======
-    def generate_positions(K, r_cell, h_BS, h_RIS, hmin_UE, hmax_UE, Rn):
->>>>>>> origin/main
         """
         Generate positions for the RIS, base station (Bob), Eve, and UEs.
 
@@ -1435,7 +1389,7 @@ class Utils:
         Returns:
         - tuple: Positions of the RIS, base station (Bob), Eve, and UEs.
         """
-<<<<<<< HEAD
+
         r_vicinity =  vic_percent_eve * (r_cell - Rn_RIS)
         RIS_pos = np.array([r_cell, r_cell, h_RIS])
         Rx_B = np.array([r_cell + r_vicinity + Rn_RIS, r_cell, h_BS])
@@ -1450,30 +1404,27 @@ class Utils:
                 break
 
         Rx_E = np.array([x_E, y_E, np.random.uniform(hmin_UE, hmax_UE)]) # hmax_UE, h_BS
-=======
+
         RIS_pos = np.array([r_cell, r_cell, h_RIS])
-        Rx_B = np.array([r_cell + Rn, r_cell, h_BS])
+        Rx_B = np.array([r_cell + Rn_B, r_cell, h_BS])
 
         while True:
             x_E, y_E = np.random.uniform(0, 2 * r_cell, 2)
             dist_bob_eve = np.linalg.norm([x_E - Rx_B[0], y_E - Rx_B[1]])
-            if Rn < dist_bob_eve < r_cell:
+            if Rn_B < dist_bob_eve < r_cell:
                 break
 
         Rx_E = np.array([x_E, y_E, np.random.uniform(hmin_UE, hmax_UE)])
->>>>>>> origin/main
+
         Tx = np.zeros((K, 3))
 
         for i in range(K):
             while True:
                 x, y = np.random.uniform(0, 2 * r_cell, 2)
-<<<<<<< HEAD
+
                 dist_ris_ue = np.linalg.norm([x - RIS_pos[0], y - RIS_pos[1]])
                 if dist_ris_ue >= max(Rn_RIS, Rn_B):
-=======
-                dist_ris_ue = np.linalg.norm([x - r_cell, y - r_cell])
-                if dist_ris_ue >= Rn:
->>>>>>> origin/main
+
                     break
             z = np.random.uniform(hmin_UE, hmax_UE)
             Tx[i] = [x, y, z]
@@ -1511,7 +1462,7 @@ class Utils:
         """
         PLo = (4 * np.pi * f0 * d0 / c)**(-2)
         return np.sqrt(2 * PLo) / np.sqrt(1 + (d / d0)**(n))
-<<<<<<< HEAD
+
     
     @staticmethod
     def nearest_value(quantization_set, value):
@@ -1744,7 +1695,3 @@ class Utils:
     #         N_x -= 1
     #         N_y = N // N_x
     #     return N_x, N_y
-
-    
-=======
->>>>>>> origin/main

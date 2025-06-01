@@ -5,7 +5,7 @@ from scipy.signal import savgol_filter
 from config import SystemConfig
 
 class Plotter:
-<<<<<<< HEAD
+
     def __init__(self,
                  x_val,
                  data_series,
@@ -33,11 +33,6 @@ class Plotter:
             self.x_val_dict = None
             self.x_val = x_val
 
-=======
-    def __init__(self, x_val, data_series, x_type='power', loc='upper left', plot_type='Data Rate', 
-                 smooth=False, window_length=5, polyorder=2):
-        self.x_val = x_val
->>>>>>> origin/main
         self.data_series = data_series
         self.x_type = x_type
         self.loc = loc
@@ -45,7 +40,6 @@ class Plotter:
         self.smooth = smooth
         self.window_length = window_length
         self.polyorder = polyorder
-<<<<<<< HEAD
         self.combined_plot = combined_plot
 
     def plot_results(self, save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure'):
@@ -102,7 +96,7 @@ class Plotter:
             'Data Rate':         "Data Rate (bps/Hz)",
             'Energy Efficiency': "Energy Efficiency (bits/J)",
         }.get(self.plot_type, "")
-=======
+
     
     def plot_results(self):
         plt.figure(figsize=(10, 6))
@@ -128,14 +122,14 @@ class Plotter:
         elif self.plot_type == 'Energy Efficiency':
             return "Energy Efficiency (bits/J)"
         return ""
->>>>>>> origin/main
+
 
     def _apply_smoothing(self, data):
         if self.window_length % 2 == 0:
             self.window_length += 1
         return savgol_filter(data, self.window_length, self.polyorder)
 
-<<<<<<< HEAD
+
     def _plot_data(self, ax, series, y_data):
         # pick the right x
         if self.x_val_dict is not None:
@@ -290,7 +284,7 @@ class Plotter:
 #             plt.yticks(fontweight='bold')
 #             legend = plt.legend(fontsize=15, loc=self.loc)
 #             legend.get_frame().set_facecolor('white')
-=======
+
     def _plot_data(self, series, y_data):
         plot_methods = {
             'Data Rate': plt.plot,
@@ -312,7 +306,7 @@ class Plotter:
         plt.yticks(fontweight='bold')
         legend = plt.legend(fontsize=15, loc=self.loc)
         legend.get_frame().set_facecolor('white')
->>>>>>> origin/main
+
 
 
 class Plot3DPositions:
@@ -333,11 +327,9 @@ class Plot3DPositions:
         self._plot_point(ax, self.Rx_E, 'Eve', 'red', 'P')
 
         self._finalize_plot(ax)
-<<<<<<< HEAD
+
         plt.show(block=True)
-=======
-        plt.show()
->>>>>>> origin/main
+
 
     def _plot_point(self, ax, point, label, color, marker):
         ax.scatter(point[0], point[1], point[2], c=color, marker=marker, s=200, label=label)
@@ -355,7 +347,6 @@ class Plot3DPositions:
 # Example Usage
 if __name__ == "__main__":
     
-<<<<<<< HEAD
     from utils import Utils
     
     # Enable interactive mode for matplotlib
@@ -884,7 +875,7 @@ if __name__ == "__main__":
     # Keep the figures open
     plt.ioff()
     plt.show()
-=======
+    
     # Initialize system configuration
     config = SystemConfig()
     
@@ -898,7 +889,6 @@ if __name__ == "__main__":
     # Plot results
     Plotter.plot_results(x_val, data_series, x_type='power', plot_type='Data Rate', smooth=True)
     Plotter.plot_results(x_val, data_series, x_type='ris_elements', plot_type='Energy Efficiency', smooth=True)
->>>>>>> origin/main
 
     # # Example data for testing
     # x_val = np.linspace(0, 10, 100)
@@ -916,7 +906,7 @@ if __name__ == "__main__":
     # Rx_E = [-5, -5, 0]
     # plot3d = Plot3DPositions(RIS, Tx, Rx_B, Rx_E)
     # plot3d.plot()
-<<<<<<< HEAD
+
 
 
 
@@ -1161,5 +1151,3 @@ if __name__ == "__main__":
 #     # Rx_E = [-5, -5, 0]
 #     # plot3d = Plot3DPositions(RIS, Tx, Rx_B, Rx_E)
 #     # plot3d.plot()
-=======
->>>>>>> origin/main
