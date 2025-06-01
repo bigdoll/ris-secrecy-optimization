@@ -26,6 +26,14 @@ if ! git rev-parse --verify main >/dev/null 2>&1; then
     git checkout -b main
 fi
 
+# Fetch the latest changes from the remote repository to avoid conflicts
+echo "Fetching the latest changes from the remote repository..."
+git fetch origin
+
+# Try to merge the remote changes if any
+echo "Merging remote changes..."
+git merge origin/main --no-edit
+
 # Check for changes
 if [[ $(git status --porcelain) ]]; then
     echo "Changes detected. Adding changes to Git..."
