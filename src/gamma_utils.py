@@ -2,10 +2,16 @@ import numpy as np
 import cvxpy as cp
 from scipy.linalg import sqrtm
 from utils import Utils
+<<<<<<< HEAD
 from typing import Union
 
 class GammaUtils:
     def __init__(self, H, G_B, G_E, sigma_sq, sigma_RIS_sq, sigma_e_sq, mu, Pc, scsi_bool=0, utils_cls=Utils):
+=======
+
+class GammaUtils:
+    def __init__(self, H, G_B, G_E, sigma_sq, sigma_RIS_sq, sigma_g_sq, mu, Pc, scsi_bool=1, utils_cls=Utils):
+>>>>>>> origin/main
         """
         Initialize the GammaUtils class with given parameters.
 
@@ -26,16 +32,23 @@ class GammaUtils:
         self.G_E = G_E
         self.sigma_sq = sigma_sq
         self.sigma_RIS_sq = sigma_RIS_sq
+<<<<<<< HEAD
         self.sigma_e_sq = sigma_e_sq
+=======
+        self.sigma_g_sq = sigma_g_sq
+>>>>>>> origin/main
         self.mu = mu
         self.Pc = Pc
         self.scsi_bool = scsi_bool
         self.utils_cls = utils_cls
+<<<<<<< HEAD
         self.K = H.shape[1]  # number of users
         self.N = H.shape[0]  # number of RIS elements
         # Precompute Eve covariance
         self.R_E = G_E @ G_E.conj().T +  scsi_bool * sigma_e_sq * np.eye(self.N)  # to be set externally: 
         # e.g., self.R_E = gE_hat @ gE_hat.conj().T + sigma_g_sq * np.eye(self.N)
+=======
+>>>>>>> origin/main
     
     def compute_R(self, p):
         """
@@ -164,7 +177,11 @@ class GammaUtils:
         K = p.shape[0]
         N = self.H.shape[0]
 
+<<<<<<< HEAD
         RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_e_sq * np.eye(N)
+=======
+        RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_g_sq * np.eye(N)
+>>>>>>> origin/main
 
         xE_bar = np.zeros_like(p)
         for k in range(K):
@@ -262,13 +279,21 @@ class GammaUtils:
         epsilon = np.finfo(float).eps
         K = p.shape[0]
         N = self.H.shape[0]
+<<<<<<< HEAD
         RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_e_sq * np.eye(N)
+=======
+        RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_g_sq * np.eye(N)
+>>>>>>> origin/main
         sr_concave = 0
 
         A_bar, B_bar, D_bar, E_bar, F_bar, L_bar, Q_bar, V_bar = self.parameters_active_Eve(gamma_bar, p)
 
         for k in range(K):
+<<<<<<< HEAD
             xE = 0 #p[k] * cp.real(cp.sum(cp.quad_form(gamma, self.H[:, k].conj().T @ RE @ self.H[:, k])))
+=======
+            xE = p[k] * cp.real(cp.sum(cp.quad_form(gamma, self.H[:, k].conj().T @ RE @ self.H[:, k])))
+>>>>>>> origin/main
             yE = 0
             interf_m = 0
             interf_m_bar = 0
@@ -286,7 +311,10 @@ class GammaUtils:
                     interf_m_bar += p[m] * np.linalg.norm(sqrtm(RE) @ Hm @ gamma_bar)**2
                     interf_m_grad += p[m] * Zm @ gamma_bar
 
+<<<<<<< HEAD
             xE = p[k] * cp.real(cp.sum(cp.quad_form(gamma, Zk)))
+=======
+>>>>>>> origin/main
             yE = interf_m + self.sigma_RIS_sq * cp.real(cp.sum(cp.quad_form(gamma, RE)))
             yE_bar = interf_m_bar + self.sigma_RIS_sq * np.linalg.norm(sqrtm(RE) @ gamma_bar)**2
             yE_bar_sqrt = np.sqrt(yE_bar)
@@ -296,6 +324,7 @@ class GammaUtils:
             sr_concave += A_bar[k] * cvx_bool + (B_bar[k] * D_bar[k]) * (yE_bar_sqrt * cvx_bool + cp.real(cp.sum(cp.matmul(grad_yE_sqrt_bar.conj().T, (gamma - gamma_bar * cvx_bool))))) - (B_bar[k] * F_bar[k]) * cvx_bool - (B_bar[k] * E_bar[k]) * yE + (L_bar[k] + V_bar[k]/np.log(2)) * cvx_bool - (Q_bar[k]/np.log(2)) * (xE + yE)
 
         return sr_concave
+<<<<<<< HEAD
     
     def SR_concave_gamma_Bob_X(self,
                            X: Union[np.ndarray, cp.Expression],
@@ -836,6 +865,8 @@ class GammaUtils:
 
 
 
+=======
+>>>>>>> origin/main
 
     def compute_grad_gamma(self, C, gamma, p):
         """
@@ -882,7 +913,11 @@ class GammaUtils:
         N = gamma.shape[0]
         NR_B = self.G_B.shape[0]
         NR_E = self.G_E.shape[1]
+<<<<<<< HEAD
         RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_e_sq * np.eye(N)
+=======
+        RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_g_sq * np.eye(N)
+>>>>>>> origin/main
 
         xB = np.zeros_like(p)
         for k in range(K):
@@ -942,7 +977,11 @@ class GammaUtils:
         N = gamma.shape[0]
         NR_B = self.G_B.shape[0]
         NR_E = self.G_E.shape[1]
+<<<<<<< HEAD
         RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_e_sq * np.eye(N)
+=======
+        RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_g_sq * np.eye(N)
+>>>>>>> origin/main
 
         grad_xB = np.zeros((N, K), dtype=np.complex128)
         for k in range(K):
@@ -994,11 +1033,19 @@ if __name__ == "__main__":
     G_E = np.random.randn(4, 4)
     sigma_sq = 1e-3
     sigma_RIS_sq = 1e-3
+<<<<<<< HEAD
     sigma_e_sq = 1e-3
     mu = 1
     Pc = 1
     scsi_bool = 1
     gamma_utils = GammaUtils(H, G_B, G_E, sigma_sq, sigma_RIS_sq, sigma_e_sq, mu, Pc, scsi_bool)
+=======
+    sigma_g_sq = 1e-3
+    mu = 1
+    Pc = 1
+    scsi_bool = 1
+    gamma_utils = GammaUtils(H, G_B, G_E, sigma_sq, sigma_RIS_sq, sigma_g_sq, mu, Pc, scsi_bool)
+>>>>>>> origin/main
     p = np.ones(4)
 
     C = gamma_utils.LMMSE_receiver_active_Bob(np.ones(4), p)

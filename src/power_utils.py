@@ -4,7 +4,11 @@ from scipy.linalg import sqrtm
 from utils import Utils
 
 class PowerUtils:
+<<<<<<< HEAD
     def __init__(self, H, G_B, G_E, sigma_sq, sigma_RIS_sq, sigma_e_sq, mu, Pc, scsi_bool=1, utils_cls=Utils):
+=======
+    def __init__(self, H, G_B, G_E, sigma_sq, sigma_RIS_sq, sigma_g_sq, mu, Pc, scsi_bool=1, utils_cls=Utils):
+>>>>>>> origin/main
         """
         Initialize the PowerUtils class with given parameters.
 
@@ -25,7 +29,11 @@ class PowerUtils:
         self.G_E = G_E
         self.sigma_sq = sigma_sq
         self.sigma_RIS_sq = sigma_RIS_sq
+<<<<<<< HEAD
         self.sigma_e_sq = sigma_e_sq
+=======
+        self.sigma_g_sq = sigma_g_sq
+>>>>>>> origin/main
         self.mu = mu
         self.Pc = Pc
         self.scsi_bool = scsi_bool
@@ -82,7 +90,11 @@ class PowerUtils:
         N = self.H.shape[0]
         epsilon = np.finfo(float).eps
 
+<<<<<<< HEAD
         RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_e_sq * np.eye(N)
+=======
+        RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_g_sq * np.eye(N)
+>>>>>>> origin/main
         d_E = self.sigma_RIS_sq * np.linalg.norm(sqrtm(RE) @ gamma)**2 + self.sigma_sq
         g1 = 0
         Gamma = np.diagflat(gamma)
@@ -126,7 +138,11 @@ class PowerUtils:
         N = self.H.shape[0]
         epsilon = np.finfo(float).eps
 
+<<<<<<< HEAD
         RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_e_sq * np.eye(N)
+=======
+        RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_g_sq * np.eye(N)
+>>>>>>> origin/main
         d_E = self.sigma_RIS_sq * np.linalg.norm(sqrtm(RE) @ gamma)**2 + self.sigma_sq
         g2 = 0
         Gamma = np.diagflat(gamma)
@@ -169,7 +185,11 @@ class PowerUtils:
         N = self.H.shape[0]
         epsilon = np.finfo(float).eps
 
+<<<<<<< HEAD
         RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_e_sq * np.eye(N)
+=======
+        RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_g_sq * np.eye(N)
+>>>>>>> origin/main
         d_E = self.sigma_RIS_sq * np.linalg.norm(sqrtm(RE) @ gamma)**2 + self.sigma_sq
 
         grad_g1 = np.zeros_like(p)
@@ -233,7 +253,11 @@ class PowerUtils:
         N = self.H.shape[0]
         epsilon = np.finfo(float).eps
 
+<<<<<<< HEAD
         RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_e_sq * np.eye(N)
+=======
+        RE = self.G_E @ self.G_E.conj().T + self.scsi_bool * self.sigma_g_sq * np.eye(N)
+>>>>>>> origin/main
         d_E = self.sigma_RIS_sq * np.linalg.norm(sqrtm(RE) @ gamma)**2 + self.sigma_sq
 
         grad_g2 = np.zeros_like(p)
@@ -327,11 +351,19 @@ if __name__ == "__main__":
     g_E = np.random.randn(4, 4)
     sigma_sq = 1e-3
     sigma_RIS_sq = 1e-3
+<<<<<<< HEAD
     sigma_e_sq = 1e-3
     mu = 1
     Pc = 1
     scsi_bool = 1
     power_utils = PowerUtils(H, G_B, g_E, sigma_sq, sigma_RIS_sq, sigma_e_sq, mu, Pc, scsi_bool)
+=======
+    sigma_g_sq = 1e-3
+    mu = 1
+    Pc = 1
+    scsi_bool = 1
+    power_utils = PowerUtils(H, G_B, g_E, sigma_sq, sigma_RIS_sq, sigma_g_sq, mu, Pc, scsi_bool)
+>>>>>>> origin/main
     gamma = np.ones(4)
     p = np.ones(4)
     p_bar = np.ones(4)
