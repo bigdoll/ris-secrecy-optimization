@@ -11,15 +11,28 @@ from collections import defaultdict
         
 logger = logging.getLogger(__name__)
 
+# def _line_search(func: Callable[[float], float],
+#                  lo: float,
+#                  hi: float,
+#                  tol: float = 1e-3) -> float:
+#     """
+#     Wrapper to SciPy's bounded scalar minimization (Brent's method) for maximization.
+#     Converts maximization to minimization of -func.
+#     """
+#     res = minimize_scalar(lambda x: -func(x), bounds=(lo, hi), method='bounded', options={'xatol': tol})
+#     return res.x
+
 def _line_search(func: Callable[[float], float],
                  lo: float,
                  hi: float,
                  tol: float = 1e-3) -> float:
     """
-    Wrapper to SciPy's bounded scalar minimization (Brent's method) for maximization.
-    Converts maximization to minimization of -func.
+    Perform 1D maximization over [lo, hi] by minimizing -func using Brent's method.
     """
-    res = minimize_scalar(lambda x: -func(x), bounds=(lo, hi), method='bounded', options={'xatol': tol})
+    res = minimize_scalar(lambda x: -func(x),
+                          bounds=(lo, hi),
+                          method='bounded',
+                          options={'xatol': tol})
     return res.x
 
 class Optimizer:
@@ -430,6 +443,7 @@ class Optimizer:
             Rnorm = R / np.linalg.norm(R, 'fro')
             
             eigs = np.linalg.eigvalsh(R)
+            pos = eigs[eigs > 0]
             
             lambda_min = float(np.min(pos))
             M = ( np.real(np.trace(R)) + PRmax ) / lambda_min
@@ -865,120 +879,399 @@ class Optimizer:
     #     print(f"\n[gamma_opt_algo2] Done. it={it} --  SSR_final: {SSR_final:.6f}, SEE_final: {SEE_final:.6f}, total_solve_time: {total_solve_time:.4f}s, status: {status}\n")
     #     return gamma_opt, SSR_final, SEE_final, it, total_solve_time
 
-    
+
     def optimize_gamma_ls(self,
-                          gamma_init: np.ndarray,
-                          p: np.ndarray,
-                          opt_ee: bool,
-                          rf_state: str,
-                          ris_state: str,
-                          cons_state: str,
-                          tol: float = 1e-3,
-                          max_cycles: int = 20) -> Tuple[np.ndarray, float, float, int, float]:
-        """Coordinate descent with 1D line search for gamma."""
+                        gamma_init: np.ndarray,
+                        p: np.ndarray,
+                        opt_ee: bool,
+                        rf_state: str,
+                        ris_state: str,
+                        cons_state: str,
+                        tol: float = 1e-3,
+                        max_cycles: int = 20
+                        ) -> Tuple[np.ndarray, float, float, int, float]:
+        """
+        Coordinate‐descent + 1D line‐search for optimizing gamma, with:
+        - Final per‐element amplitude clamping based on (ris_state, cons_state).
+        - Optional global‐norm check if cons_state=='global'.
+
+        Parameters
+        ----------
+        gamma_init : (N,) complex
+            Initial RIS coefficients.
+        p : (K,) float
+            UE powers.
+        opt_ee : bool
+            If False, maximize SSR. If True, maximize SEE.
+        rf_state : {'RF-Gain','RF-Power'}
+        ris_state : {'active','passive'}
+        cons_state : {'global','local'}
+        tol : float
+            Convergence tolerance for objective change.
+        max_cycles : int
+            Maximum alternating cycles (amplitude+phase updates).
+
+        Returns
+        -------
+        gamma_opt : (N,) complex
+            Final RIS coefficients (clamped/scaled as needed).
+        SSR_opt : float
+            Secrecy sum‐rate at gamma_opt.
+        SEE_opt : float
+            Secrecy energy efficiency at gamma_opt (if opt_ee=True).
+        cycles_run : int
+            Number of coordinate‐descent cycles actually run.
+        elapsed : float
+            Wall‐clock time spent in this routine (seconds).
+        """
         N = gamma_init.size
+        # Separate amplitude and phase
         a_vec = np.abs(gamma_init).copy()
-        phi_vec = np.angle(gamma_init).copy()
-        phi_vec = np.mod(phi_vec, 2*np.pi)
-        prev_obj = -np.inf
+        phi_vec = np.mod(np.angle(gamma_init), 2 * np.pi).copy()
+
+        # Precompute R and its trace
+        R = self.utils_cls.compute_R(self.H, p, self.sigma_RIS_sq)  # (N×N) Hermitian
+        trace_R = np.real(np.trace(R))
         ris_bool = 1 if ris_state == 'active' else 0
 
-        # Precompute R
-        R = self.utils_cls.compute_R(self.H, p, self.sigma_RIS_sq)
-        # Rnorm = R / np.linalg.norm(R, 'fro')
-        trace_R = np.real(np.trace(R))
+        # Determine PRmax (0 if passive, else as given)
         if ris_state == 'active':
-            PRmax = (self.a - 1)* np.real(np.trace(R)) if rf_state == 'RF-Gain' else self.PRmax
+            if rf_state == 'RF-Gain':
+                PRmax = (self.a - 1) * trace_R
+            else:
+                PRmax = self.PRmax
         else:
-            PRmax = 0
-            
-        # eigs = np.linalg.eigvalsh(R)
-        # Rmax, Rmin = eigs.max(), eigs.min()
-        # a_lo_q = np.sqrt(trace_R / (Rmax * N)) if ris_state == 'active' else 0
-        # a_hi_q = np.sqrt((trace_R + (PRmax if ris_state == 'active' else 0)) / (Rmin * N)) if cons_state == 'global' else 1
-        cycles = 0
-        start = time.time()
+            PRmax = 0.0
 
-        def objective(a, phi):
-            gamma = a * np.exp(1j * phi)
-            SRb = self.gamma_utils_cls.SR_active_concave_gamma_Bob(gamma, gamma, p, cvx_bool=1).value
-            SRe = self.gamma_utils_cls.SR_active_concave_gamma_Eve(gamma, gamma, p, cvx_bool=1).value
-            SSR = max(SRb + SRe, 0)
+        prev_obj = -np.inf
+        gamma_prev = None
+        cycles_run = 0
+        start_time = time.perf_counter()
+
+        # Numeric-only objective: SSR or SSR/(Pris+Pc)
+        def objective(a: np.ndarray, phi: np.ndarray) -> float:
+            gamma_vec = a * np.exp(1j * phi)
+            # Bob’s sum-rate
+            SRb = float(
+                self.utils_cls.SR_active_algo1(
+                    self.G_B, self.H, gamma_vec, p,
+                    self.sigma_sq, self.sigma_RIS_sq, self.sigma_e_sq,
+                    self.scsi_bool, True, "Bob"
+                )
+            )
+            # Eve’s approx rate
+            SRe = float(
+                self.utils_cls.SR_active_algo1(
+                    self.G_E, self.H, gamma_vec, p,
+                    self.sigma_sq, self.sigma_RIS_sq, self.sigma_e_sq,
+                    self.scsi_bool, True, "Eve"
+                )
+            )
+            SSR = max(SRb - SRe, 0.0)
+
             if not opt_ee:
                 return SSR
+
+            # Otherwise: SEE = SSR / (Pris + Pc_eq)
             Pc_eq = self.gamma_utils_cls.compute_Pc_eq_gamma(p)
-            # diag_R   = np.real(np.diag(R))        # [R₁₁, R₂₂, …, R_NN]
-            Pris  = ris_bool * np.real(np.trace(R @ (gamma @ gamma.conj().T))) # np.dot(diag_R, a**2)
-            # Pris = (trace_R + (self.PRmax if ris_state == 'active' else 0)) * np.real(np.dot(a**2, np.diag(R)/trace_R))
-            return SSR / (Pris + Pc_eq)
+            Pris = ris_bool * np.real(np.vdot(gamma_vec, R @ gamma_vec))
+            return SSR / (Pris + Pc_eq + 1e-16)
 
-        while cycles < max_cycles:
-            cycles += 1
-            # gamma = a_vec * np.exp(1j * phi_vec)
-            # amplitude updates
-            for n in range(N):
-                gamma = a_vec * np.exp(1j * phi_vec)
-                gamma_n_sq = np.abs(gamma[n])**2
-                Rnn_real = np.real(R[n, n])
-
-                # Compute full quadratic form
-                quad_form = np.real(np.trace(R @ (gamma @ gamma.conj().T))) # np.real(np.vdot(gamma, R @ gamma))
-
-                # Remove only the (n,n) term from the full quadratic form
-                gamma_n_contrib = gamma_n_sq * Rnn_real
-                quad_form_excl_n = quad_form - gamma_n_contrib
-                lo = (trace_R - quad_form_excl_n) / Rnn_real
-                a_lo = (np.sqrt(lo) if lo > 0 else 0 ) if ris_state == 'active' else 0
-                a_hi = np.sqrt((PRmax + trace_R - quad_form_excl_n) / Rnn_real) if cons_state == 'global' else 1
-                if a_hi <= 0:
-                    a_hi = 1          
-                def f_a(x):
-                    a_temp = a_vec.copy()
-                    a_temp[n] = x
-                    return objective(a_temp, phi_vec)
-                a_vec[n] = _line_search(f_a, a_lo, a_hi, tol)
-            # phase updates
-            for n in range(N):
-                def f_phi(x):
-                    phi_temp = phi_vec.copy()
-                    phi_temp[n] = x
-                    return objective(a_vec, phi_temp)
-                phi_vec[n] = _line_search(f_phi, 0, 2*np.pi, tol)
-
+        print("\n[gamma_ls] Starting coordinate‐descent line‐search")
+        for cycles in range(1, max_cycles + 1):
+            cycles_run = cycles
+            gamma_curr = a_vec * np.exp(1j * phi_vec)
             curr_obj = objective(a_vec, phi_vec)
-            if abs(curr_obj - prev_obj) < tol:
-                print('\nStopping Optimization of gamma... optimal point reached!')
-                if curr_obj < prev_obj:
-                    gamma_sol = gamma_prev
-                else:
-                    gamma_sol = a_vec * np.exp(1j * phi_vec)
-                break
-            prev_obj = curr_obj
-            gamma_prev = gamma 
-            
-        gamma_opt = gamma_sol # a_vec * np.exp(1j * phi_vec)
-        SSR_opt = objective(a_vec, phi_vec) if not opt_ee else None
-        SEE_opt = objective(a_vec, phi_vec) if opt_ee else None
-        elapsed = time.time() - start
-        # ensure both SSR and SEE computed
-        if SSR_opt is None:
-            gamma = gamma_opt
-            SRb = self.gamma_utils_cls.SR_active_concave_gamma_Bob(gamma, gamma, p, cvx_bool=1).value
-            SRe = self.gamma_utils_cls.SR_active_concave_gamma_Eve(gamma, gamma, p, cvx_bool=1).value
-            SSR_opt = max(SRb + SRe, 0)
-        if SEE_opt is None:
-            gamma = gamma_opt
-            SRb = self.gamma_utils_cls.SR_active_concave_gamma_Bob(gamma, gamma, p, cvx_bool=1).value
-            SRe = self.gamma_utils_cls.SR_active_concave_gamma_Eve(gamma, gamma, p, cvx_bool=1).value
-            SSR_val = max(SRb + SRe, 0)
-            Pc_eq = self.gamma_utils_cls.compute_Pc_eq_gamma(p)
-            Pris  = ris_bool * np.real(np.trace(R @ (gamma @ gamma.conj().T)))
-            # Pris = (trace_R + (self.PRmax if ris_state=='active' else 0)) * np.real(np.dot(a_vec**2, np.diag(R)/trace_R))
-            SEE_opt = SSR_val / (Pris + Pc_eq)
-        
-        print(f'\n[gamma_ls] final -> Number of Steps: {cycles}, gamma_norm: {np.linalg.norm(gamma_opt):.3e}, SSR_opt: {SSR_opt:.6f}, SEE_opt: {SEE_opt:.6f}, time_complexity_gamma: {elapsed:.4f}\n')
+            print(f" Cycle {cycles:2d}: current objective = {curr_obj:.6e}")
 
-        return gamma_opt, SSR_opt, SEE_opt, cycles, elapsed
+            # Amplitude updates
+            for n in range(N):
+                gamma_full = a_vec * np.exp(1j * phi_vec)
+                gamma_nn_sq = np.abs(gamma_full[n])**2
+                Rnn = np.real(R[n, n])
+
+                quad_full = np.real(np.vdot(gamma_full, R @ gamma_full))
+                quad_excl_n = quad_full - (gamma_nn_sq * Rnn)
+
+                # Determine per-element [a_lo, a_hi]
+                if cons_state == 'global':
+                    # Global constraint (PRmax = 0 if passive)
+                    lo_val = (trace_R - quad_excl_n) / Rnn
+                    a_lo = float(np.sqrt(lo_val)) if lo_val > 0 else 0.0
+
+                    hi_val = (trace_R + PRmax - quad_excl_n) / Rnn
+                    a_hi = float(np.sqrt(hi_val)) if hi_val > 0 else 1.0
+
+                    # If active + local would not happen here—global branch only
+                else:
+                    # cons_state == 'local'
+                    if ris_state == 'active':
+                        # Active + Local: [1, a_max] with a_max from PRmax
+                        a_lo = 1.0
+                        hi_val = (trace_R + PRmax - quad_excl_n) / Rnn
+                        a_hi = float(np.sqrt(hi_val)) if hi_val > 0 else 1.0
+                    else:
+                        # Passive + Local: [0, 1]
+                        a_lo = 0.0
+                        a_hi = 1.0
+
+                # Final sanity clamp
+                if a_lo < 0.0:
+                    a_lo = 0.0
+                if a_hi <= 0.0:
+                    a_hi = 1.0
+
+                def f_a(x: float) -> float:
+                    temp_a = a_vec.copy()
+                    temp_a[n] = x
+                    return objective(temp_a, phi_vec)
+
+                best_a = _line_search(f_a, a_lo, a_hi, tol)
+                a_vec[n] = best_a
+                print(f"   [amp n={n:2d}] a_lo={a_lo:.4f}, a_hi={a_hi:.4f} → a[{n}]={best_a:.4f}")
+
+            # Phase updates
+            for n in range(N):
+                def f_phi(x: float) -> float:
+                    temp_phi = phi_vec.copy()
+                    temp_phi[n] = x
+                    return objective(a_vec, temp_phi)
+
+                best_phi = _line_search(f_phi, 0.0, 2*np.pi, tol)
+                phi_vec[n] = best_phi
+                print(f"   [phase n={n:2d}] phi[{n}]={best_phi:.4e}")
+
+            new_obj = objective(a_vec, phi_vec)
+            print(f" Cycle {cycles:2d} done: new objective = {new_obj:.6e}")
+
+            if abs(new_obj - curr_obj) < tol:
+                print(" [gamma_ls] Converged (objective change below tol).")
+                if new_obj < curr_obj:
+                    print(" [gamma_ls] Objective decreased; reverting to previous gamma.")
+                    gamma_opt = gamma_prev
+                else:
+                    gamma_opt = a_vec * np.exp(1j * phi_vec)
+                break
+
+            prev_obj = curr_obj
+            gamma_prev = gamma_curr.copy()
+        else:
+            gamma_opt = a_vec * np.exp(1j * phi_vec)
+            print(" [gamma_ls] Reached max_cycles without full convergence.")
+
+        # ────────────────────────────────────────────────────────────────────────────
+        # 1) FINAL PER‐ELEMENT AMPLITUDE CLAMPING, same logic as above
+        gamma_opt = np.array(gamma_opt, copy=True)
+        a_opt = np.abs(gamma_opt)
+        phi_opt = np.angle(gamma_opt)
+
+        for n in range(N):
+            gamma_full = a_opt * np.exp(1j * phi_opt)
+            gamma_nn_sq = a_opt[n]**2
+            Rnn = np.real(R[n, n])
+            quad_full = np.real(np.vdot(gamma_full, R @ gamma_full))
+            quad_excl_n = quad_full - (gamma_nn_sq * Rnn)
+
+            # Per-element [a_lo, a_hi]
+            if cons_state == 'global':
+                lo_val = (trace_R - quad_excl_n) / Rnn
+                a_lo = float(np.sqrt(lo_val)) if lo_val > 0 else 0.0
+                hi_val = (trace_R + PRmax - quad_excl_n) / Rnn
+                a_hi = float(np.sqrt(hi_val)) if hi_val > 0 else 1.0
+            else:
+                if ris_state == 'active':
+                    a_lo = 1.0
+                    hi_val = (trace_R + PRmax - quad_excl_n) / Rnn
+                    a_hi = float(np.sqrt(hi_val)) if hi_val > 0 else 1.0
+                else:
+                    a_lo = 0.0
+                    a_hi = 1.0
+
+            if a_opt[n] < a_lo:
+                print(f" [gamma_ls] Clamping a[{n}] up from {a_opt[n]:.4e} to {a_lo:.4e}")
+                a_opt[n] = a_lo
+            elif a_opt[n] > a_hi:
+                print(f" [gamma_ls] Clamping a[{n}] down from {a_opt[n]:.4e} to {a_hi:.4e}")
+                a_opt[n] = a_hi
+
+        gamma_opt = a_opt * np.exp(1j * phi_opt)
+
+        # ────────────────────────────────────────────────────────────────────────────
+        # 2) GLOBAL QUADRATIC CHECK (only if cons_state=='global')
+        if cons_state == 'global':
+            eigs = np.linalg.eigvalsh(R)
+            pos_eigs = eigs[eigs > 0]
+            if pos_eigs.size == 0:
+                raise RuntimeError("All eigenvalues of R are non-positive; cannot enforce global constraint.")
+
+            lambda_min = float(np.min(pos_eigs))
+            lambda_max = float(np.max(pos_eigs))
+            M_min = trace_R / lambda_max
+            M_max = (trace_R + PRmax) / lambda_min
+
+            norm_sq = np.linalg.norm(gamma_opt)**2
+            if norm_sq < M_min - 1e-12:
+                scale = np.sqrt(M_min / (norm_sq + 1e-16))
+                print(f" [gamma_ls] Scaling γ up: ||γ||²={norm_sq:.4e} < M_min={M_min:.4e} → scale={scale:.4e}")
+                gamma_opt *= scale
+            elif norm_sq > M_max + 1e-12:
+                scale = np.sqrt(M_max / norm_sq)
+                print(f" [gamma_ls] Scaling γ down: ||γ||²={norm_sq:.4e} > M_max={M_max:.4e} → scale={scale:.4e}")
+                gamma_opt *= scale
+            else:
+                print(f" [gamma_ls] ||γ||²={norm_sq:.4e} within [{M_min:.4e}, {M_max:.4e}]")
+        else:
+            print(f" [gamma_ls] Skipped global‐norm check (cons_state={cons_state}).")
+
+        elapsed = time.perf_counter() - start_time
+
+        # Compute final SSR / SEE at gamma_opt
+        SRb_final = float(
+            self.utils_cls.SR_active_algo1(
+                self.G_B, self.H, gamma_opt, p,
+                self.sigma_sq, self.sigma_RIS_sq, self.sigma_e_sq,
+                self.scsi_bool, True, "Bob"
+            )
+        )
+        SRe_final = float(
+            self.utils_cls.SR_active_algo1(
+                self.G_E, self.H, gamma_opt, p,
+                self.sigma_sq, self.sigma_RIS_sq, self.sigma_e_sq,
+                self.scsi_bool, True, "Eve"
+            )
+        )
+        SSR_opt = max(SRb_final - SRe_final, 0.0)
+
+        Pc_eq = self.gamma_utils_cls.compute_Pc_eq_gamma(p)
+        Pris = ris_bool * np.real(np.vdot(gamma_opt, R @ gamma_opt))
+        SEE_opt = SSR_opt / (Pris + Pc_eq + 1e-16)
+        
+        # if opt_ee:
+        #     Pc_eq = self.gamma_utils_cls.compute_Pc_eq_gamma(p)
+        #     Pris = ris_bool * np.real(np.vdot(gamma_opt, R @ gamma_opt))
+        #     SEE_opt = SSR_opt / (Pris + Pc_eq + 1e-16)
+        # else:
+        #     SEE_opt = None
+
+        print(f"\n[gamma_ls] final → cycles={cycles_run}, ||γ||={np.linalg.norm(gamma_opt):.3e}, "
+            f"SSR={SSR_opt:.6e}, SEE={SEE_opt:.6e}, time={elapsed:.3f}s\n") # SEE={SEE_opt:.6e if SEE_opt is not None else 'N/A'}
+
+        return gamma_opt, SSR_opt, SEE_opt, cycles_run, elapsed
+
+
+    # def optimize_gamma_ls(self,
+    #                       gamma_init: np.ndarray,
+    #                       p: np.ndarray,
+    #                       opt_ee: bool,
+    #                       rf_state: str,
+    #                       ris_state: str,
+    #                       cons_state: str,
+    #                       tol: float = 1e-3,
+    #                       max_cycles: int = 20) -> Tuple[np.ndarray, float, float, int, float]:
+    #     """Coordinate descent with 1D line search for gamma."""
+    #     N = gamma_init.size
+    #     a_vec = np.abs(gamma_init).copy()
+    #     phi_vec = np.angle(gamma_init).copy()
+    #     phi_vec = np.mod(phi_vec, 2*np.pi)
+    #     prev_obj = -np.inf
+    #     ris_bool = 1 if ris_state == 'active' else 0
+
+    #     # Precompute R
+    #     R = self.utils_cls.compute_R(self.H, p, self.sigma_RIS_sq)
+    #     # Rnorm = R / np.linalg.norm(R, 'fro')
+    #     trace_R = np.real(np.trace(R))
+    #     if ris_state == 'active':
+    #         PRmax = (self.a - 1)* np.real(np.trace(R)) if rf_state == 'RF-Gain' else self.PRmax
+    #     else:
+    #         PRmax = 0
+            
+    #     # eigs = np.linalg.eigvalsh(R)
+    #     # Rmax, Rmin = eigs.max(), eigs.min()
+    #     # a_lo_q = np.sqrt(trace_R / (Rmax * N)) if ris_state == 'active' else 0
+    #     # a_hi_q = np.sqrt((trace_R + (PRmax if ris_state == 'active' else 0)) / (Rmin * N)) if cons_state == 'global' else 1
+    #     cycles = 0
+    #     start = time.time()
+
+    #     def objective(a, phi):
+    #         gamma = a * np.exp(1j * phi)
+    #         SRb = self.gamma_utils_cls.SR_active_concave_gamma_Bob(gamma, gamma, p, cvx_bool=1).value
+    #         SRe = self.gamma_utils_cls.SR_active_concave_gamma_Eve(gamma, gamma, p, cvx_bool=1).value
+    #         SSR = max(SRb + SRe, 0)
+    #         if not opt_ee:
+    #             return SSR
+    #         Pc_eq = self.gamma_utils_cls.compute_Pc_eq_gamma(p)
+    #         # diag_R   = np.real(np.diag(R))        # [R₁₁, R₂₂, …, R_NN]
+    #         Pris  = ris_bool * np.real(np.trace(R @ (gamma @ gamma.conj().T))) # np.dot(diag_R, a**2)
+    #         # Pris = (trace_R + (self.PRmax if ris_state == 'active' else 0)) * np.real(np.dot(a**2, np.diag(R)/trace_R))
+    #         return SSR / (Pris + Pc_eq)
+
+    #     while cycles < max_cycles:
+    #         cycles += 1
+    #         # gamma = a_vec * np.exp(1j * phi_vec)
+    #         # amplitude updates
+    #         for n in range(N):
+    #             gamma = a_vec * np.exp(1j * phi_vec)
+    #             gamma_n_sq = np.abs(gamma[n])**2
+    #             Rnn_real = np.real(R[n, n])
+
+    #             # Compute full quadratic form
+    #             quad_form = np.real(np.trace(R @ (gamma @ gamma.conj().T))) # np.real(np.vdot(gamma, R @ gamma))
+
+    #             # Remove only the (n,n) term from the full quadratic form
+    #             gamma_n_contrib = gamma_n_sq * Rnn_real
+    #             quad_form_excl_n = quad_form - gamma_n_contrib
+    #             lo = (trace_R - quad_form_excl_n) / Rnn_real
+    #             a_lo = (np.sqrt(lo) if lo > 0 else 0 ) if ris_state == 'active' else 0
+    #             a_hi = np.sqrt((PRmax + trace_R - quad_form_excl_n) / Rnn_real) if cons_state == 'global' else 1
+    #             if a_hi <= 0:
+    #                 a_hi = 1          
+    #             def f_a(x):
+    #                 a_temp = a_vec.copy()
+    #                 a_temp[n] = x
+    #                 return objective(a_temp, phi_vec)
+    #             a_vec[n] = _line_search(f_a, a_lo, a_hi, tol)
+    #         # phase updates
+    #         for n in range(N):
+    #             def f_phi(x):
+    #                 phi_temp = phi_vec.copy()
+    #                 phi_temp[n] = x
+    #                 return objective(a_vec, phi_temp)
+    #             phi_vec[n] = _line_search(f_phi, 0, 2*np.pi, tol)
+
+    #         curr_obj = objective(a_vec, phi_vec)
+    #         if abs(curr_obj - prev_obj) < tol:
+    #             print('\nStopping Optimization of gamma... optimal point reached!')
+    #             if curr_obj < prev_obj:
+    #                 gamma_sol = gamma_prev
+    #             else:
+    #                 gamma_sol = a_vec * np.exp(1j * phi_vec)
+    #             break
+    #         prev_obj = curr_obj
+    #         gamma_prev = gamma 
+            
+    #     gamma_opt = gamma_sol # a_vec * np.exp(1j * phi_vec)
+    #     SSR_opt = objective(a_vec, phi_vec) if not opt_ee else None
+    #     SEE_opt = objective(a_vec, phi_vec) if opt_ee else None
+    #     elapsed = time.time() - start
+    #     # ensure both SSR and SEE computed
+    #     if SSR_opt is None:
+    #         gamma = gamma_opt
+    #         SRb = self.gamma_utils_cls.SR_active_concave_gamma_Bob(gamma, gamma, p, cvx_bool=1).value
+    #         SRe = self.gamma_utils_cls.SR_active_concave_gamma_Eve(gamma, gamma, p, cvx_bool=1).value
+    #         SSR_opt = max(SRb + SRe, 0)
+    #     if SEE_opt is None:
+    #         gamma = gamma_opt
+    #         SRb = self.gamma_utils_cls.SR_active_concave_gamma_Bob(gamma, gamma, p, cvx_bool=1).value
+    #         SRe = self.gamma_utils_cls.SR_active_concave_gamma_Eve(gamma, gamma, p, cvx_bool=1).value
+    #         SSR_val = max(SRb + SRe, 0)
+    #         Pc_eq = self.gamma_utils_cls.compute_Pc_eq_gamma(p)
+    #         Pris  = ris_bool * np.real(np.trace(R @ (gamma @ gamma.conj().T)))
+    #         # Pris = (trace_R + (self.PRmax if ris_state=='active' else 0)) * np.real(np.dot(a_vec**2, np.diag(R)/trace_R))
+    #         SEE_opt = SSR_val / (Pris + Pc_eq)
+        
+    #     print(f'\n[gamma_ls] final -> Number of Steps: {cycles}, gamma_norm: {np.linalg.norm(gamma_opt):.3e}, SSR_opt: {SSR_opt:.6f}, SEE_opt: {SEE_opt:.6f}, time_complexity_gamma: {elapsed:.4f}\n')
+
+    #     return gamma_opt, SSR_opt, SEE_opt, cycles, elapsed
 
     
     def p_cvxopt_algo1(self,
