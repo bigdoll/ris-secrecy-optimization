@@ -7,7 +7,7 @@ class SystemConfig:
         self.rf_state = 'RF-Gain' # 'RF-Gain' or 'RF-Power'
         self.ris_state = 'active'  # 'active' OR 'passive'
         self.cons_state = 'global'  # 'global' OR 'local'
-        self.opt_state = 'ee'  # 'sr' OR 'ee'
+        self.opt_state = 'sr'  # 'sr' OR 'ee'
         self.gamma_method = 'ls' # 'cvx1' 'cvx2' OR 'ls'
         self.opt_bool = {'sr': 0, 'ee': 1}  # Optimization state
         self.run_separately = True  # Run the simulation separately for each combination of varying parameters

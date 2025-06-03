@@ -356,17 +356,15 @@ class Optimizer:
             print(f"[gamma_opt_algo1] it={it}, ||Δγ||={(np.linalg.norm(gamma_curr-gamma_prev)):.3e}, "
                   f"SSR={SSR_curr:.6f}, SEE={SEE_curr:.6f}, time={solver_time:.3f}s, status={status}")
 
-            # Stopping: objective decrease
-            if ln_curr < ln_prev:
-                print("[gamma_opt_algo1] Obj decreased; reverting to previous gamma.")
-                gamma_opt = gamma_prev
-                # SSR_opt, SEE_opt = SSR_prev, SEE_prev
-                break
-
-
             # Convergence
             if abs(ln_curr - ln_prev) < tol and status.startswith('optimal'):
                 print("[gamma_opt_algo1] Converged within tolerance.")
+                # Stopping: objective decrease
+                if ln_curr < ln_prev:
+                    print("[gamma_opt_algo1] Obj decreased; reverting to previous gamma.")
+                    gamma_opt = gamma_prev
+                    # SSR_opt, SEE_opt = SSR_prev, SEE_prev
+                    break
                 gamma_opt = gamma_curr
                 # SSR_opt, SEE_opt = SSR_curr, SEE_curr
                 break
@@ -620,27 +618,34 @@ class Optimizer:
                 f"SSR_curr = {SSR_curr:.6e}, SEE_curr = {SEE_curr:.6e}, solver_time = {solver_time:.4f}s, status = {status}"
             )
 
-            # 7) Safeguard: if SSR dropped, revert.
-            if it > 0 and (SSR_curr < SSR_prev or SSR_curr <= 0):
-                print(" -- SSR decreased or its has a negative Secrecy; reverting to X0.")
-                X_opt = X0
-                SSR_curr = SSR_prev
-                break
-
-            # 8) Convergence test.
+            # 7) Convergence test.
             if not opt_bool:
                 if abs(SSR_curr - SSR_prev) < tol:
                     print(f" -- Converged (|ΔSSR| < {tol}).")
+                       # 8) Safeguard: if SSR dropped, revert.
+                    if it > 0 and (SSR_curr < SSR_prev or SSR_curr <= 0):
+                        print(" -- SSR decreased or its has a negative Secrecy; reverting to X0.")
+                        X_opt = X0
+                        SSR_curr = SSR_prev
+                        break
                     SSR_prev = SSR_curr
                     break
+                
                 SSR_prev = SSR_curr
             else:
                 lam_new = SSR_curr / power_val if (power_val > 0) else 0.0
                 print(f" -- Dinkelbach update: λ_new = {lam_new:.6e}")
                 if abs(lam_new - lam) < tol:
                     print(f" -- Converged (|Δλ| < {tol}).")
+                    # 8) Safeguard: if SSR dropped, revert.
+                    if it > 0 and (lam_new < lam or lam_new <= 0):
+                        print(" -- SEE decreased or its has a negative Secrecy; reverting to X0.")
+                        X_opt = X0
+                        lam_new = lam
+                        break
                     lam = lam_new
                     break
+                
                 lam = lam_new
 
             # 9) Update X0 for next iteration
@@ -928,7 +933,7 @@ class Optimizer:
         # Separate amplitude and phase
         a_vec = np.abs(gamma_init).copy()
         phi_vec = np.mod(np.angle(gamma_init), 2 * np.pi).copy()
-
+        
         # Precompute R and its trace
         R = self.utils_cls.compute_R(self.H, p, self.sigma_RIS_sq)  # (N×N) Hermitian
         trace_R = np.real(np.trace(R))
@@ -943,11 +948,6 @@ class Optimizer:
         else:
             PRmax = 0.0
 
-        prev_obj = -np.inf
-        gamma_prev = None
-        cycles_run = 0
-        start_time = time.perf_counter()
-
         # Numeric-only objective: SSR or SSR/(Pris+Pc)
         def objective(a: np.ndarray, phi: np.ndarray) -> float:
             gamma_vec = a * np.exp(1j * phi)
@@ -960,13 +960,25 @@ class Optimizer:
                 )
             )
             # Eve’s approx rate
-            SRe = float(
+            if self.scsi_bool == 0:
+                
+                SRe = float(
                 self.utils_cls.SR_active_algo1(
                     self.G_E, self.H, gamma_vec, p,
                     self.sigma_sq, self.sigma_RIS_sq, self.sigma_e_sq,
                     self.scsi_bool, True, "Eve"
                 )
             )
+            else:
+                SRe = float(
+                self.utils_cls.SR_active_algo1(
+                    self.G_E, self.H, gamma_vec, p,
+                    self.sigma_sq, self.sigma_RIS_sq, self.sigma_e_sq,
+                    self.scsi_bool, False, "Eve"
+                )
+            )
+                
+            
             SSR = max(SRb - SRe, 0.0)
 
             if not opt_ee:
@@ -976,6 +988,13 @@ class Optimizer:
             Pc_eq = self.gamma_utils_cls.compute_Pc_eq_gamma(p)
             Pris = ris_bool * np.real(np.vdot(gamma_vec, R @ gamma_vec))
             return SSR / (Pris + Pc_eq + 1e-16)
+
+        prev_obj = objective(a_vec, phi_vec) #-np.inf
+        gamma_prev = a_vec * np.exp(1j * phi_vec)
+        cycles_run = 0
+        start_time = time.perf_counter()
+
+        
 
         print("\n[gamma_ls] Starting coordinate‐descent line‐search")
         for cycles in range(1, max_cycles + 1):
@@ -1020,6 +1039,10 @@ class Optimizer:
                     a_lo = 0.0
                 if a_hi <= 0.0:
                     a_hi = 1.0
+                if a_hi < a_lo:
+                    temp = a_hi
+                    a_hi = a_lo
+                    a_lo = temp
 
                 def f_a(x: float) -> float:
                     temp_a = a_vec.copy()
@@ -1059,11 +1082,15 @@ class Optimizer:
             gamma_opt = a_vec * np.exp(1j * phi_vec)
             print(" [gamma_ls] Reached max_cycles without full convergence.")
 
+        # if cycles_run == max_cycles + 1:
+        #     gamma_opt = a_vec * np.exp(1j * phi_vec)
+        #     print(" [gamma_ls] Reached max_cycles without full convergence.")
+        
         # ────────────────────────────────────────────────────────────────────────────
         # 1) FINAL PER‐ELEMENT AMPLITUDE CLAMPING, same logic as above
         gamma_opt = np.array(gamma_opt, copy=True)
         a_opt = np.abs(gamma_opt)
-        phi_opt = np.angle(gamma_opt)
+        phi_opt = np.mod(np.angle(gamma_opt), 2 * np.pi) #  np.angle(gamma_opt)
 
         for n in range(N):
             gamma_full = a_opt * np.exp(1j * phi_opt)
@@ -1088,10 +1115,10 @@ class Optimizer:
                     a_hi = 1.0
 
             if a_opt[n] < a_lo:
-                print(f" [gamma_ls] Clamping a[{n}] up from {a_opt[n]:.4e} to {a_lo:.4e}")
+                print(f" [gamma_ls] Clamping a[{n}] up from {float(a_opt[n]):.4f} to {a_lo:.4f}")
                 a_opt[n] = a_lo
             elif a_opt[n] > a_hi:
-                print(f" [gamma_ls] Clamping a[{n}] down from {a_opt[n]:.4e} to {a_hi:.4e}")
+                print(f" [gamma_ls] Clamping a[{n}] down from {float(a_opt[n]):.4f} to {a_hi:.4f}")
                 a_opt[n] = a_hi
 
         gamma_opt = a_opt * np.exp(1j * phi_opt)
@@ -1125,6 +1152,8 @@ class Optimizer:
 
         elapsed = time.perf_counter() - start_time
 
+        GE_True = self.G_E if self.scsi_bool == 0 else  self.G_E + self.GE_error
+        
         # Compute final SSR / SEE at gamma_opt
         SRb_final = float(
             self.utils_cls.SR_active_algo1(
@@ -1135,7 +1164,7 @@ class Optimizer:
         )
         SRe_final = float(
             self.utils_cls.SR_active_algo1(
-                self.G_E, self.H, gamma_opt, p,
+                GE_True, self.H, gamma_opt, p,
                 self.sigma_sq, self.sigma_RIS_sq, self.sigma_e_sq,
                 self.scsi_bool, True, "Eve"
             )
@@ -1372,18 +1401,18 @@ class Optimizer:
             ln_curr = SSR_curr if not opt_bool else SEE_curr
             print(f"[p_opt] SSR={SSR_curr:.6f}, SEE={SEE_curr:.6f}")
 
-            # Safeguard: objective decrease
-            if ln_curr < ln_prev:
-                print("[p_opt] Objective decreased; reverting to previous p.")
-                logger.info("Objective decreased; using previous iterate.")
-                p_curr = p_prev
-                SSR_curr, SEE_curr = SSR_prev, SEE_prev
-                break
-
             # Convergence
             if abs(ln_curr - ln_prev) < tol and prob.status.startswith('optimal'):
                 print(f"[p_opt] Converged: Δ={ln_curr-ln_prev:.2e} < tol={tol}")
                 logger.info("Convergence reached in power optimization.")
+                # Safeguard: objective decrease
+                if ln_curr < ln_prev:
+                    print("[p_opt] Objective decreased; reverting to previous p.")
+                    logger.info("Objective decreased; using previous iterate.")
+                    p_curr = p_prev
+                    SSR_curr, SEE_curr = SSR_prev, SEE_prev
+                    break
+              
                 p_prev = p_curr
                 SSR_prev, SEE_prev = SSR_curr, SEE_curr
                 break
@@ -1583,7 +1612,7 @@ class Optimizer:
 
             # convergence check
             ln_curr = ssr if not opt_bool else see / self.BW
-            if alt_it > 1 and abs(ln_curr - ln_prev) < tol:
+            if alt_it > 1 and abs(ln_curr - ln_prev) / max(ln_prev,  1e-12) < tol:
                 print(f"[altopt] Converged: Δ={ln_curr-ln_prev:.3e} < tol={tol}")
                 logger.info("Convergence reached.")
                 break

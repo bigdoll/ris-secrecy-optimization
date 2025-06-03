@@ -1686,8 +1686,35 @@ class Utils:
         print("====================================\n")
 
         return overall_feasible, info
-
     
+    @staticmethod
+    def saturate_after_max(data):
+        """
+        Saturates all elements in a list or numpy array to the maximum value
+        after the position of the first maximum.
+
+        Parameters:
+        -----------
+        data : list or np.ndarray
+            The input sequence to process.
+
+        Returns:
+        --------
+        np.ndarray
+            The saturated array.
+        """
+        if not isinstance(data, (list, np.ndarray)):
+            raise TypeError("Input must be a list or numpy array.")
+        
+        data_array = np.array(data)
+        max_index = np.argmax(data_array)
+        max_value = data_array[max_index]
+
+        # Saturate all values after the max index
+        data_array[max_index+1:] = max_value
+
+        return data_array
+
     # def compute_N_x_y(N):
     #     N_x = int(np.ceil(np.sqrt(N)))
     #     N_y = N // N_x

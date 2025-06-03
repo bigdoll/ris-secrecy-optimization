@@ -98,30 +98,30 @@ class Plotter:
         }.get(self.plot_type, "")
 
     
-    def plot_results(self):
-        plt.figure(figsize=(10, 6))
-        self._set_labels()
+    # def plot_results(self):
+    #     plt.figure(figsize=(10, 6))
+    #     self._set_labels()
         
-        for series in self.data_series:
-            y_data = self._apply_smoothing(series['data']) if self.smooth else series['data']
-            self._plot_data(series, y_data)
+    #     for series in self.data_series:
+    #         y_data = self._apply_smoothing(series['data']) if self.smooth else series['data']
+    #         self._plot_data(series, y_data)
         
-        self._finalize_plot()
-        plt.show()
+    #     self._finalize_plot()
+    #     plt.show()
 
-    def _set_labels(self):
-        plt.xlabel(self._get_xlabel(), fontsize=15, fontweight='bold')
-        plt.ylabel(self._get_ylabel(), fontsize=15, fontweight='bold')
+    # def _set_labels(self):
+    #     plt.xlabel(self._get_xlabel(), fontsize=15, fontweight='bold')
+    #     plt.ylabel(self._get_ylabel(), fontsize=15, fontweight='bold')
 
-    def _get_xlabel(self):
-        return "Maximum available Transmit Power (dBm)" if self.x_type == 'power' else "Number of RIS elements"
+    # def _get_xlabel(self):
+    #     return "Maximum available Transmit Power (dBm)" if self.x_type == 'power' else "Number of RIS elements"
 
-    def _get_ylabel(self):
-        if self.plot_type == 'Data Rate':
-            return "Data Rate (bps/Hz)"
-        elif self.plot_type == 'Energy Efficiency':
-            return "Energy Efficiency (bits/J)"
-        return ""
+    # def _get_ylabel(self):
+    #     if self.plot_type == 'Data Rate':
+    #         return "Data Rate (bps/Hz)"
+    #     elif self.plot_type == 'Energy Efficiency':
+    #         return "Energy Efficiency (bits/J)"
+    #     return ""
 
 
     def _apply_smoothing(self, data):
@@ -285,27 +285,27 @@ class Plotter:
 #             legend = plt.legend(fontsize=15, loc=self.loc)
 #             legend.get_frame().set_facecolor('white')
 
-    def _plot_data(self, series, y_data):
-        plot_methods = {
-            'Data Rate': plt.plot,
-            'Energy Efficiency': plt.plot,
-            'Bar': plt.bar,
-            'Scatter': plt.scatter
-        }
-        plot_method = plot_methods.get(self.plot_type, plt.plot)
+    # def _plot_data(self, series, y_data):
+    #     plot_methods = {
+    #         'Data Rate': plt.plot,
+    #         'Energy Efficiency': plt.plot,
+    #         'Bar': plt.bar,
+    #         'Scatter': plt.scatter
+    #     }
+    #     plot_method = plot_methods.get(self.plot_type, plt.plot)
         
-        if self.plot_type in ['Bar', 'Scatter']:
-            plot_method(self.x_val, y_data, label=series['label'], color=series['color'])
-        else:
-            plot_method(self.x_val, y_data, label=series['label'], color=series['color'], 
-                        marker=series['marker'], markersize=8, linewidth=series.get('line_width', 3))
+    #     if self.plot_type in ['Bar', 'Scatter']:
+    #         plot_method(self.x_val, y_data, label=series['label'], color=series['color'])
+    #     else:
+    #         plot_method(self.x_val, y_data, label=series['label'], color=series['color'], 
+    #                     marker=series['marker'], markersize=8, linewidth=series.get('line_width', 3))
 
-    def _finalize_plot(self):
-        plt.tick_params(axis='both', labelsize=15)
-        plt.xticks(fontweight='bold')
-        plt.yticks(fontweight='bold')
-        legend = plt.legend(fontsize=15, loc=self.loc)
-        legend.get_frame().set_facecolor('white')
+    # def _finalize_plot(self):
+    #     plt.tick_params(axis='both', labelsize=15)
+    #     plt.xticks(fontweight='bold')
+    #     plt.yticks(fontweight='bold')
+    #     legend = plt.legend(fontsize=15, loc=self.loc)
+    #     legend.get_frame().set_facecolor('white')
 
 
 
@@ -359,184 +359,202 @@ if __name__ == "__main__":
     keys_to_average = {
     "sr_uniform_Bob_pcsi", "sr_uniform_Bob_scsi", "sr_uniform_Eve_pcsi",
     "sr_uniform_Eve_scsi", "ssr_uniform_pcsi", "ssr_uniform_scsi", "gee_uniform_Bob_pcsi", "gee_uniform_Bob_scsi",
-    "gee_uniform_Eve_pcsi", "gee_uniform_Eve_scsi", "see_uniform_pcsi", "see_uniform_scsi", "ssr_sol_pcsi", "ssr_sol_Q_pcsi",
-    "ssr_sol_scsi", "ssr_sol_Q_scsi", "see_sol_pcsi", "see_sol_Q_pcsi", "see_sol_scsi", "see_sol_Q_scsi", "iteration_altopt_pcsi", "iteration_altopt_scsi",
+    "gee_uniform_Eve_pcsi", "gee_uniform_Eve_scsi", "see_uniform_pcsi", "see_uniform_scsi", "sr_sol_pcsi", "sr_sol_Q_pcsi", "ssr_sol_pcsi", "ssr_sol_Q_pcsi",
+    "sr_sol_scsi", "sr_sol_Q_scsi", "ssr_sol_scsi", "ssr_sol_Q_scsi", "gee_sol_pcsi", "gee_sol_Q_pcsi", "see_sol_pcsi", "see_sol_Q_pcsi", "gee_sol_scsi", "gee_sol_Q_scsi", "see_sol_scsi", "see_sol_Q_scsi", "iteration_altopt_pcsi", "iteration_altopt_scsi",
     "iteration_p_pcsi", "iteration_p_scsi", "iteration_gamma_pcsi", "iteration_gamma_scsi",
     "time_complexity_altopt_pcsi", "time_complexity_altopt_scsi", "time_complexity_p_pcsi",
-    "time_complexity_p_scsi", "time_complexity_gamma_pcsi", "time_complexity_gamma_scsi", 'sr_sol_Bob_pcsi', 'sr_sol_Eve_pcsi',
-    'sr_sol_Bob_scsi', 'sr_sol_Eve_scsi', 'gee_sol_Bob_pcsi', 'gee_sol_Eve_pcsi', 'gee_sol_Bob_scsi', 'gee_sol_Eve_scsi'
+    "time_complexity_p_scsi", "time_complexity_gamma_pcsi", "time_complexity_gamma_scsi"
     }
+    
+    # 'sr_sol_Bob_pcsi', 'sr_sol_Eve_pcsi',
+    # 'sr_sol_Bob_scsi', 'sr_sol_Eve_scsi', 'gee_sol_Bob_pcsi', 'gee_sol_Eve_pcsi', 'gee_sol_Bob_scsi', 'gee_sol_Eve_scsi'
+    
+    # keys_to_average = {
+    # "sr_uniform_Bob_pcsi", "sr_uniform_Bob_scsi", "sr_uniform_Eve_pcsi",
+    # "sr_uniform_Eve_scsi", "ssr_uniform_pcsi", "ssr_uniform_scsi", "gee_uniform_Bob_pcsi", "gee_uniform_Bob_scsi",
+    # "gee_uniform_Eve_pcsi", "gee_uniform_Eve_scsi", "see_uniform_pcsi", "see_uniform_scsi", "ssr_sol_pcsi", "ssr_sol_Q_pcsi",
+    # "ssr_sol_scsi", "ssr_sol_Q_scsi", "see_sol_pcsi", "see_sol_Q_pcsi", "see_sol_scsi", "see_sol_Q_scsi", "iteration_altopt_pcsi", "iteration_altopt_scsi",
+    # "iteration_p_pcsi", "iteration_p_scsi", "iteration_gamma_pcsi", "iteration_gamma_scsi",
+    # "time_complexity_altopt_pcsi", "time_complexity_altopt_scsi", "time_complexity_p_pcsi",
+    # "time_complexity_p_scsi", "time_complexity_gamma_pcsi", "time_complexity_gamma_scsi", 'sr_sol_Bob_pcsi', 'sr_sol_Eve_pcsi',
+    # 'sr_sol_Bob_scsi', 'sr_sol_Eve_scsi', 'gee_sol_Bob_pcsi', 'gee_sol_Eve_pcsi', 'gee_sol_Bob_scsi', 'gee_sol_Eve_scsi'
+    # }
     
     # Load the results
     
     # # 1. Varying Ptmax
-    results_sr_active = np.load('data/outputs/output_results_algo1_test3_sr_active_2s_100ris_3.0dB_5dBm_0dBvar_Ptmax.npz', allow_pickle=True)['arr_0'].item()  
-    results_ee_active = np.load('data/outputs/output_results_algo1_test3_ee_active_2s_100ris_3.0dB_5dBm_0dBvar_Ptmax.npz', allow_pickle=True)['arr_0'].item()  
+    results_sr_active = np.load('data/output/output_results_algo1_sr_active_2s_100ris_5.0dB_5dBm_0dBvar_Ptmax-algo1.npz', allow_pickle=True)['arr_0'].item()  
+    results_ee_active = np.load('data/output/output_results_algo1_ee_active_2s_100ris_5.0dB_5dBm_0dBvar_Ptmax-algo1.npz', allow_pickle=True)['arr_0'].item()  
+    results_ee_active_ls = np.load('data/output/output_results_algo1_ee_active_2s_100ris_5.0dB_5dBm_0dBvar_Ptmax-ls.npz', allow_pickle=True)['arr_0'].item()  
+    
+    # results_sr_active = np.load('data/outputs/output_results_algo1_test3_sr_active_2s_100ris_3.0dB_5dBm_0dBvar_Ptmax.npz', allow_pickle=True)['arr_0'].item()  
+    # results_ee_active = np.load('data/outputs/output_results_algo1_test3_ee_active_2s_100ris_3.0dB_5dBm_0dBvar_Ptmax.npz', allow_pickle=True)['arr_0'].item()  
+    
+    results_avg_sr_active = Utils.average_results(results_sr_active, keys_to_average)
+    results_avg_ee_active = Utils.average_results(results_ee_active, keys_to_average)
+    results_avg_ee_active_ls = Utils.average_results(results_ee_active_ls, keys_to_average)
+    
+    # ## Load the channels:
+    # config = SystemConfig()
+    
+    # N_range = config.N # config.get('N', [config.N])
+    # channel_samples_range = Utils.monte_carlo_simulation(
+    #     config.NUM_SAMPLES, config.FILENAME_CHANNEL, N_range, config.r_cell, config.h_BS, config.h_RIS, config.hmin_UE, config.hmax_UE, config.d0,  config.K, config.NR, config.f0, config.lambda_0, config.d, config.c, config.n, config.R_K, config.NEEV, config.vic_percent_eve, channel_model="rician", shadowing=False
+    # )
+
+    # ris_samples_range = Utils.generate_ris_coefficients(
+    #     config.NUM_SAMPLES, config.FILENAME_RIS, N_range, channel_samples_range, (config.PTMIN / config.K) * np.ones(config.K),  config.sigma_sq, config.sigma_RIS_sq, scsi_bool=0, algo="algo1", state=config.ris_state
+    # )
+    
+    # for sample_index in range(len(channel_samples_range)):
+    #     channel_samples = channel_samples_range[sample_index] # G_B_lst, gE_hat_lst, gE_error_lst, H_lst, sigma_e_sq
+    #     ris_samples = ris_samples_range[sample_index]
+        
+    #     Pc_active = config.compute_static_power_consumption(config.N, state='active') 
+    #     Pc_passive = config.compute_static_power_consumption(config.N)
+    #     Pc = Pc_active if config.ris_state == 'active' else Pc_passive
+
+    #     G_B = channel_samples[config.N]['G_B']
+    #     gE_hat = channel_samples[config.N]['gE']
+    #     gE_error = channel_samples[config.N]['gE_error']
+    #     H = channel_samples[config.N]['H']
+    #     sigma_e_sq = channel_samples[config.N]['sigma_e_sq']
+    #     gE = gE_hat + gE_error[0]
+    #     # gamma = ris_samples[config.N]['gamma']
+        
+    #     for power_index, power_value in enumerate(results_sr_active[sample_index][('Ptmax',)]):
+    #         gamma_sr_pcsi = results_sr_active[sample_index]['gamma_sol_pcsi'][power_index]
+    #         gamma_sr_scsi = results_sr_active[sample_index]['gamma_sol_scsi'][power_index]
+    #         gamma_ee_pcsi = results_ee_active[sample_index]['gamma_sol_pcsi'][power_index]
+    #         gamma_ee_scsi = results_ee_active[sample_index]['gamma_sol_scsi'][power_index]
+            
+    #         # opt power
+    #         p_sr_pcsi = results_sr_active[sample_index]['p_sol_pcsi'][power_index]
+    #         p_sr_scsi = results_sr_active[sample_index]['p_sol_scsi'][power_index]
+    #         p_ee_pcsi = results_ee_active[sample_index]['p_sol_pcsi'][power_index]
+    #         p_ee_scsi = results_ee_active[sample_index]['p_sol_scsi'][power_index]
+            
+
+    #         # p_uniform = (config.Ptmax / config.K) * np.ones(config.K)
+    #         # R = Utils.compute_R(H, p_uniform, config.sigma_RIS_sq)
+    #         # assert np.all(np.linalg.eigvals(R) > 0), "Matrix R is not positive definite."
+            
+    #         # if config.ris_state == 'active':
+    #         #     PRmax = (config.a - 1) * np.real(np.trace(R)) if config.rf_state == 'RF-Gain' else config.PRmax
+    #         # else:
+    #         #     PRmax = 0
+            
+    #         # rho_norm = np.sqrt((PRmax + np.real(np.trace(R))) / np.real(np.sum(gamma.conj().T @ R @ gamma))) if config.cons_state == 'global' else 1
+    #         # gamma_random = rho_norm * gamma
+
+    #         sr_sol_Bob_pcsi = Utils.SR_active_algo1(G_B, H, gamma_sr_pcsi, p_sr_pcsi, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, scsi_bool=0, orig_bool=True, Rx="Bob")
+    #         sr_sol_Eve_pcsi = Utils.SR_active_algo1(gE, H, gamma_sr_pcsi, p_sr_pcsi, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, scsi_bool=0, orig_bool=True, Rx="Eve")
+    #         ssr_sol_pcsi = max(sr_sol_Bob_pcsi - sr_sol_Eve_pcsi, 0)
+
+    #         sr_sol_Bob_scsi = Utils.SR_active_algo1(G_B, H, gamma_sr_scsi, p_sr_scsi, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, scsi_bool=0, orig_bool=True, Rx="Bob")
+    #         sr_sol_Eve_scsi = Utils.SR_active_algo1(gE, H, gamma_sr_scsi, p_sr_scsi, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, scsi_bool=0, orig_bool=True, Rx="Eve")
+    #         ssr_sol_scsi = max(sr_sol_Bob_scsi - sr_sol_Eve_scsi, 0)
+
+    #         gee_sol_Bob_pcsi = config.BW * Utils.GEE_active_algo1(G_B, H, gamma_ee_pcsi, p_ee_pcsi, config.mu, Pc, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, config.ris_state, scsi_bool=0, orig_bool=True, Rx="Bob")
+    #         gee_sol_Eve_pcsi = config.BW * Utils.GEE_active_algo1(gE, H, gamma_ee_pcsi, p_ee_pcsi, config.mu, Pc, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, config.ris_state, scsi_bool=0, orig_bool=True, Rx="Eve")
+    #         see_sol_pcsi = max(gee_sol_Bob_pcsi - gee_sol_Eve_pcsi, 0)
+
+    #         gee_sol_Bob_scsi = config.BW * Utils.GEE_active_algo1(G_B, H, gamma_ee_scsi, p_ee_scsi, config.mu, Pc, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, config.ris_state, scsi_bool=0, orig_bool=True, Rx="Bob")
+    #         gee_sol_Eve_scsi = config.BW * Utils.GEE_active_algo1(gE, H, gamma_ee_scsi, p_ee_scsi, config.mu, Pc, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, config.ris_state, scsi_bool=0, orig_bool=True, Rx="Eve")
+    #         see_sol_scsi = max(gee_sol_Bob_scsi - gee_sol_Eve_scsi, 0)
+            
+            
+    #         # For secrecy‐rate dict
+    #         d_sr = results_sr_active[sample_index]
+    #         d_sr.setdefault('sr_sol_Bob_pcsi', []).append(sr_sol_Bob_pcsi)
+    #         d_sr.setdefault('sr_sol_Eve_pcsi', []).append(sr_sol_Eve_pcsi)
+    #         d_sr.setdefault('sr_sol_Bob_scsi', []).append(sr_sol_Bob_scsi)
+    #         d_sr.setdefault('sr_sol_Eve_scsi', []).append(sr_sol_Eve_scsi)
+
+    #         # For secrecy‐EE dict
+    #         d_ee = results_ee_active[sample_index]
+    #         d_ee.setdefault('gee_sol_Bob_pcsi', []).append(gee_sol_Bob_pcsi)
+    #         d_ee.setdefault('gee_sol_Eve_pcsi', []).append(gee_sol_Eve_pcsi)
+    #         d_ee.setdefault('gee_sol_Bob_scsi', []).append(gee_sol_Bob_scsi)
+    #         d_ee.setdefault('gee_sol_Eve_scsi', []).append(gee_sol_Eve_scsi)
+    
+    #         # results_sr_active[sample_index]['sr_sol_Bob_pcsi'].append(sr_sol_Bob_pcsi)
+    #         # results_sr_active[sample_index]['sr_sol_Eve_pcsi'].append(sr_sol_Eve_pcsi)
+    #         # results_sr_active[sample_index]['sr_sol_Bob_scsi'].append(sr_sol_Bob_scsi)
+    #         # results_sr_active[sample_index]['sr_sol_Eve_scsi'].append(sr_sol_Eve_scsi)
+    #         # results_ee_active[sample_index]['gee_sol_Bob_pcsi'].append(gee_sol_Bob_pcsi)
+    #         # results_ee_active[sample_index]['gee_sol_Eve_pcsi'].append(gee_sol_Eve_pcsi)
+    #         # results_ee_active[sample_index]['gee_sol_Bob_scsi'].append(gee_sol_Bob_scsi)
+    #         # results_ee_active[sample_index]['gee_sol_Eve_scsi'].append(gee_sol_Eve_scsi)
+
+     
+    # ### SEE Vs. SSR Plot:
     
     # results_avg_sr_active = Utils.average_results(results_sr_active, keys_to_average)
     # results_avg_ee_active = Utils.average_results(results_ee_active, keys_to_average)
     
-    ## Load the channels:
-    config = SystemConfig()
-    
-    N_range = config.N # config.get('N', [config.N])
-    channel_samples_range = Utils.monte_carlo_simulation(
-        config.NUM_SAMPLES, config.FILENAME_CHANNEL, N_range, config.r_cell, config.h_BS, config.h_RIS, config.hmin_UE, config.hmax_UE, config.d0,  config.K, config.NR, config.f0, config.lambda_0, config.d, config.c, config.n, config.R_K, config.NEEV, config.vic_percent_eve, channel_model="rician", shadowing=False
-    )
-
-    ris_samples_range = Utils.generate_ris_coefficients(
-        config.NUM_SAMPLES, config.FILENAME_RIS, N_range, channel_samples_range, (config.PTMIN / config.K) * np.ones(config.K),  config.sigma_sq, config.sigma_RIS_sq, scsi_bool=0, algo="algo1", state=config.ris_state
-    )
-    
-    for sample_index in range(len(channel_samples_range)):
-        channel_samples = channel_samples_range[sample_index] # G_B_lst, gE_hat_lst, gE_error_lst, H_lst, sigma_e_sq
-        ris_samples = ris_samples_range[sample_index]
-        
-        Pc_active = config.compute_static_power_consumption(config.N, state='active') 
-        Pc_passive = config.compute_static_power_consumption(config.N)
-        Pc = Pc_active if config.ris_state == 'active' else Pc_passive
-
-        G_B = channel_samples[config.N]['G_B']
-        gE_hat = channel_samples[config.N]['gE']
-        gE_error = channel_samples[config.N]['gE_error']
-        H = channel_samples[config.N]['H']
-        sigma_e_sq = channel_samples[config.N]['sigma_e_sq']
-        gE = gE_hat + gE_error[0]
-        # gamma = ris_samples[config.N]['gamma']
-        
-        for power_index, power_value in enumerate(results_sr_active[sample_index][('Ptmax',)]):
-            gamma_sr_pcsi = results_sr_active[sample_index]['gamma_sol_pcsi'][power_index]
-            gamma_sr_scsi = results_sr_active[sample_index]['gamma_sol_scsi'][power_index]
-            gamma_ee_pcsi = results_ee_active[sample_index]['gamma_sol_pcsi'][power_index]
-            gamma_ee_scsi = results_ee_active[sample_index]['gamma_sol_scsi'][power_index]
-            
-            # opt power
-            p_sr_pcsi = results_sr_active[sample_index]['p_sol_pcsi'][power_index]
-            p_sr_scsi = results_sr_active[sample_index]['p_sol_scsi'][power_index]
-            p_ee_pcsi = results_ee_active[sample_index]['p_sol_pcsi'][power_index]
-            p_ee_scsi = results_ee_active[sample_index]['p_sol_scsi'][power_index]
-            
-
-            # p_uniform = (config.Ptmax / config.K) * np.ones(config.K)
-            # R = Utils.compute_R(H, p_uniform, config.sigma_RIS_sq)
-            # assert np.all(np.linalg.eigvals(R) > 0), "Matrix R is not positive definite."
-            
-            # if config.ris_state == 'active':
-            #     PRmax = (config.a - 1) * np.real(np.trace(R)) if config.rf_state == 'RF-Gain' else config.PRmax
-            # else:
-            #     PRmax = 0
-            
-            # rho_norm = np.sqrt((PRmax + np.real(np.trace(R))) / np.real(np.sum(gamma.conj().T @ R @ gamma))) if config.cons_state == 'global' else 1
-            # gamma_random = rho_norm * gamma
-
-            sr_sol_Bob_pcsi = Utils.SR_active_algo1(G_B, H, gamma_sr_pcsi, p_sr_pcsi, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, scsi_bool=0, orig_bool=True, Rx="Bob")
-            sr_sol_Eve_pcsi = Utils.SR_active_algo1(gE, H, gamma_sr_pcsi, p_sr_pcsi, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, scsi_bool=0, orig_bool=True, Rx="Eve")
-            ssr_sol_pcsi = max(sr_sol_Bob_pcsi - sr_sol_Eve_pcsi, 0)
-
-            sr_sol_Bob_scsi = Utils.SR_active_algo1(G_B, H, gamma_sr_scsi, p_sr_scsi, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, scsi_bool=0, orig_bool=True, Rx="Bob")
-            sr_sol_Eve_scsi = Utils.SR_active_algo1(gE, H, gamma_sr_scsi, p_sr_scsi, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, scsi_bool=0, orig_bool=True, Rx="Eve")
-            ssr_sol_scsi = max(sr_sol_Bob_scsi - sr_sol_Eve_scsi, 0)
-
-            gee_sol_Bob_pcsi = config.BW * Utils.GEE_active_algo1(G_B, H, gamma_ee_pcsi, p_ee_pcsi, config.mu, Pc, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, config.ris_state, scsi_bool=0, orig_bool=True, Rx="Bob")
-            gee_sol_Eve_pcsi = config.BW * Utils.GEE_active_algo1(gE, H, gamma_ee_pcsi, p_ee_pcsi, config.mu, Pc, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, config.ris_state, scsi_bool=0, orig_bool=True, Rx="Eve")
-            see_sol_pcsi = max(gee_sol_Bob_pcsi - gee_sol_Eve_pcsi, 0)
-
-            gee_sol_Bob_scsi = config.BW * Utils.GEE_active_algo1(G_B, H, gamma_ee_scsi, p_ee_scsi, config.mu, Pc, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, config.ris_state, scsi_bool=0, orig_bool=True, Rx="Bob")
-            gee_sol_Eve_scsi = config.BW * Utils.GEE_active_algo1(gE, H, gamma_ee_scsi, p_ee_scsi, config.mu, Pc, config.sigma_sq, config.sigma_RIS_sq, sigma_e_sq, config.ris_state, scsi_bool=0, orig_bool=True, Rx="Eve")
-            see_sol_scsi = max(gee_sol_Bob_scsi - gee_sol_Eve_scsi, 0)
-            
-            
-            # For secrecy‐rate dict
-            d_sr = results_sr_active[sample_index]
-            d_sr.setdefault('sr_sol_Bob_pcsi', []).append(sr_sol_Bob_pcsi)
-            d_sr.setdefault('sr_sol_Eve_pcsi', []).append(sr_sol_Eve_pcsi)
-            d_sr.setdefault('sr_sol_Bob_scsi', []).append(sr_sol_Bob_scsi)
-            d_sr.setdefault('sr_sol_Eve_scsi', []).append(sr_sol_Eve_scsi)
-
-            # For secrecy‐EE dict
-            d_ee = results_ee_active[sample_index]
-            d_ee.setdefault('gee_sol_Bob_pcsi', []).append(gee_sol_Bob_pcsi)
-            d_ee.setdefault('gee_sol_Eve_pcsi', []).append(gee_sol_Eve_pcsi)
-            d_ee.setdefault('gee_sol_Bob_scsi', []).append(gee_sol_Bob_scsi)
-            d_ee.setdefault('gee_sol_Eve_scsi', []).append(gee_sol_Eve_scsi)
-    
-            # results_sr_active[sample_index]['sr_sol_Bob_pcsi'].append(sr_sol_Bob_pcsi)
-            # results_sr_active[sample_index]['sr_sol_Eve_pcsi'].append(sr_sol_Eve_pcsi)
-            # results_sr_active[sample_index]['sr_sol_Bob_scsi'].append(sr_sol_Bob_scsi)
-            # results_sr_active[sample_index]['sr_sol_Eve_scsi'].append(sr_sol_Eve_scsi)
-            # results_ee_active[sample_index]['gee_sol_Bob_pcsi'].append(gee_sol_Bob_pcsi)
-            # results_ee_active[sample_index]['gee_sol_Eve_pcsi'].append(gee_sol_Eve_pcsi)
-            # results_ee_active[sample_index]['gee_sol_Bob_scsi'].append(gee_sol_Bob_scsi)
-            # results_ee_active[sample_index]['gee_sol_Eve_scsi'].append(gee_sol_Eve_scsi)
-
-     
-    ### SEE Vs. SSR Plot:
-    
-    results_avg_sr_active = Utils.average_results(results_sr_active, keys_to_average)
-    results_avg_ee_active = Utils.average_results(results_ee_active, keys_to_average)
-    
-    x_vals = {
-    'pCSI': results_avg_sr_active['sr_sol_Bob_pcsi'],
-    'sCSI': results_avg_sr_active['sr_sol_Bob_scsi'],
-    # add more if you like (e.g. active RIS vs. passive RIS)
-    }
-       
     # x_vals = {
-    # 'pCSI': results_avg_sr_active['ssr_sol_pcsi'],
-    # 'sCSI': results_avg_sr_active['ssr_sol_scsi'],
+    # 'pCSI': results_avg_sr_active['sr_sol_Bob_pcsi'],
+    # 'sCSI': results_avg_sr_active['sr_sol_Bob_scsi'],
     # # add more if you like (e.g. active RIS vs. passive RIS)
     # }
+       
+    # # x_vals = {
+    # # 'pCSI': results_avg_sr_active['ssr_sol_pcsi'],
+    # # 'sCSI': results_avg_sr_active['ssr_sol_scsi'],
+    # # # add more if you like (e.g. active RIS vs. passive RIS)
+    # # }
     
-    see_series = [
-        {
-        'key':   'pCSI',
-        'data':  results_avg_ee_active['gee_sol_Bob_pcsi'],
-        'label': 'GEE (Alg 3, pCSI)',
-        'color': 'blue',
-        'marker':'o',
-        'type':  'pCSI'
-        },
-        {
-        'key':   'sCSI',
-        'data':  results_avg_ee_active['gee_sol_Bob_scsi'],
-        'label': 'GEE (Alg 6, sCSI)',
-        'color': 'red',
-        'marker':'x',
-        'type':  'sCSI'
-        },
-    ]
-     
     # see_series = [
     #     {
     #     'key':   'pCSI',
-    #     'data':  results_avg_ee_active['see_sol_pcsi'],
-    #     'label': 'SEE (Alg 3, pCSI)',
+    #     'data':  results_avg_ee_active['gee_sol_Bob_pcsi'],
+    #     'label': 'GEE (Alg 3, pCSI)',
     #     'color': 'blue',
     #     'marker':'o',
     #     'type':  'pCSI'
     #     },
     #     {
     #     'key':   'sCSI',
-    #     'data':  results_avg_ee_active['see_sol_scsi'],
-    #     'label': 'SEE (Alg 6, sCSI)',
+    #     'data':  results_avg_ee_active['gee_sol_Bob_scsi'],
+    #     'label': 'GEE (Alg 6, sCSI)',
     #     'color': 'red',
     #     'marker':'x',
     #     'type':  'sCSI'
     #     },
     # ]
+     
+    # # see_series = [
+    # #     {
+    # #     'key':   'pCSI',
+    # #     'data':  results_avg_ee_active['see_sol_pcsi'],
+    # #     'label': 'SEE (Alg 3, pCSI)',
+    # #     'color': 'blue',
+    # #     'marker':'o',
+    # #     'type':  'pCSI'
+    # #     },
+    # #     {
+    # #     'key':   'sCSI',
+    # #     'data':  results_avg_ee_active['see_sol_scsi'],
+    # #     'label': 'SEE (Alg 6, sCSI)',
+    # #     'color': 'red',
+    # #     'marker':'x',
+    # #     'type':  'sCSI'
+    # #     },
+    # # ]
 
-    plotter = Plotter(
-    x_val=x_vals,
-    data_series=see_series,
-    x_type='Rate',            # since x-axis is SSR (Rate)
-    plot_type='Energy Efficiency',
-    combined_plot=False
-    )
-    plotter.plot_results()
+    # plotter = Plotter(
+    # x_val=x_vals,
+    # data_series=see_series,
+    # x_type='Rate',            # since x-axis is SSR (Rate)
+    # plot_type='Energy Efficiency',
+    # combined_plot=False
+    # )
+    # plotter.plot_results()
 
     
     # # # Extract data for plotting
-    # x_val = np.arange(-20, 52, 2) #config.power_range_dbm #results['Ptmax'][0]
+    x_val = np.arange(-20, 52, 2) #config.power_range_dbm #results['Ptmax'][0]
     
     # results_avg_sr = Utils.average_values_by_key_equal_length(results_sr, config.NUM_SAMPLES)
     # results_avg_ee = Utils.average_values_by_key_equal_length(results_ee, config.NUM_SAMPLES)   
@@ -668,24 +686,28 @@ if __name__ == "__main__":
     #         plotter_energy_Q_pcsi.plot_results(save_path='data/figures/TIF_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Q_Vs_Ptmax_pCSI')
     #         plotter_energy_Q_scsi.plot_results(save_path='data/figures/TIF_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Q_Vs_Ptmax_sCSI')
     
-    # # Rate and EE series for Ptmax     
-    # rate_series = [
-    #     {'data': results_avg_sr_active['ssr_sol_pcsi'], 'label': 'SSR by Algorithm 3 for SSR maximization', 'color': 'blue', 'marker': 'o', 'type': 'pCSI'},
-    #     {'data': results_avg_sr_active['ssr_sol_scsi'], 'label': 'SSR by Algorithm 6 for SSR maximization', 'color': 'red', 'marker': 'x', 'type': 'sCSI'},
-    #     # {'data': results_avg_ee_active['ssr_sol_pcsi'], 'label': 'SSR by Algorithm 3 for SEE maximization', 'color': 'green', 'marker': '^', 'type': 'pCSI'},
-    #     # {'data': results_avg_ee_active['ssr_sol_scsi'], 'label': 'SSR by Algorithm 6 for SEE maximization', 'color': 'magenta', 'marker': '*', 'type': 'sCSI'},
-    #     # {'data': results_avg_sr_active['ssr_uniform_pcsi'], 'label': 'SSR by random RIS phases, uniform \nTx powers and RIS moduli', 'color': 'black', 'marker': 's', 'type': 'pCSI'},
-    #     # {'data': results_avg_sr_active['ssr_uniform_scsi'], 'label': 'SSR with random phases - sCSI', 'color': 'cyan', 'marker': '+', 'type': 'sCSI'}
-    # ]
+    # Rate and EE series for Ptmax     
+    rate_series = [
+        {'data': results_avg_sr_active['ssr_sol_pcsi'], 'label': 'SSR by Algorithm 3 for SSR maximization', 'color': 'blue', 'marker': 'o', 'type': 'pCSI'},
+        {'data': results_avg_sr_active['ssr_sol_scsi'], 'label': 'SSR by Algorithm 6 for SSR maximization', 'color': 'red', 'marker': 'x', 'type': 'sCSI'},
+        {'data': results_avg_ee_active['ssr_sol_pcsi'], 'label': 'SSR by Algorithm 3 for SEE maximization', 'color': 'green', 'marker': '^', 'type': 'pCSI'},
+        {'data': results_avg_ee_active['ssr_sol_scsi'], 'label': 'SSR by Algorithm 6 for SEE maximization', 'color': 'magenta', 'marker': '*', 'type': 'sCSI'},
+        {'data':  Utils.saturate_after_max(results_avg_ee_active_ls['ssr_sol_pcsi']), 'label': 'SSR with line search - pCSI', 'color': 'orange', 'marker': 'v', 'type': 'pCSI'},
+        {'data':  Utils.saturate_after_max(results_avg_ee_active_ls['ssr_sol_scsi']), 'label': 'SSR with line search - sCSI', 'color': 'brown', 'marker': 'D', 'type': 'sCSI'},
+        {'data': results_avg_sr_active['ssr_uniform_pcsi'], 'label': 'SSR by random RIS phases, uniform \nTx powers and RIS moduli', 'color': 'black', 'marker': 's', 'type': 'pCSI'},
+        # {'data': results_avg_sr_active['ssr_uniform_scsi'], 'label': 'SSR with random phases - sCSI', 'color': 'cyan', 'marker': '+', 'type': 'sCSI'}
+    ]
     
-    # energy_series = [
-    #     {'data': results_avg_ee_active['see_sol_pcsi'], 'label': 'SEE by Algorithm 3 for SEE maximization', 'color': 'blue', 'marker': 'o', 'type': 'pCSI'},
-    #     {'data': results_avg_ee_active['see_sol_scsi'], 'label': 'SEE by Algorithm 6 for SEE maximization', 'color': 'red', 'marker': 'x', 'type': 'sCSI'},
-    #     # {'data': results_avg_sr_active['see_sol_pcsi'], 'label': 'SEE by Algorithm 3 for SSR maximization', 'color': 'green', 'marker': '^', 'type': 'pCSI'},
-    #     # {'data': results_avg_sr_active['see_sol_scsi'], 'label': 'SEE by Algorithm 6 for SSR maximization', 'color': 'magenta', 'marker': '*', 'type': 'sCSI'},
-    #     # {'data': results_avg_ee_active['see_uniform_pcsi'], 'label': 'SEE by random RIS phases, uniform \nTx powers and RIS moduli', 'color': 'black', 'marker': 's', 'type': 'pCSI'},
-    #     # {'data': results_avg_ee_active['see_uniform_scsi'], 'label': 'SEE with random phases - sCSI', 'color': 'cyan', 'marker': '+', 'type': 'sCSI'}
-    #     ]
+    energy_series = [
+        {'data': Utils.saturate_after_max(results_avg_ee_active['see_sol_pcsi']), 'label': 'SEE by Algorithm 3 for SEE maximization', 'color': 'blue', 'marker': 'o', 'type': 'pCSI'},
+        {'data': Utils.saturate_after_max(results_avg_ee_active['see_sol_scsi']), 'label': 'SEE by Algorithm 6 for SEE maximization', 'color': 'red', 'marker': 'x', 'type': 'sCSI'},
+        {'data': results_avg_sr_active['see_sol_pcsi'], 'label': 'SEE by Algorithm 3 for SSR maximization', 'color': 'green', 'marker': '^', 'type': 'pCSI'},
+        {'data': results_avg_sr_active['see_sol_scsi'], 'label': 'SEE by Algorithm 6 for SSR maximization', 'color': 'magenta', 'marker': '*', 'type': 'sCSI'},
+        {'data': Utils.saturate_after_max(results_avg_ee_active_ls['see_sol_pcsi']), 'label': 'SEE with line search - pCSI', 'color': 'orange', 'marker': 'v', 'type': 'pCSI'},
+        {'data': Utils.saturate_after_max(results_avg_ee_active_ls['see_sol_scsi']), 'label': 'SEE with line search - sCSI', 'color': 'brown', 'marker': 'D', 'type': 'sCSI'},
+        {'data': results_avg_ee_active['see_uniform_pcsi'], 'label': 'SEE by random RIS phases, uniform \nTx powers and RIS moduli', 'color': 'black', 'marker': 's', 'type': 'pCSI'},
+        # {'data': results_avg_ee_active['see_uniform_scsi'], 'label': 'SEE with random phases - sCSI', 'color': 'cyan', 'marker': '+', 'type': 'sCSI'}
+        ]
     
     # # Energy series for N:
     # rate_series = [
@@ -774,121 +796,120 @@ if __name__ == "__main__":
     # ]
 
 
-    # # Combined plot option
-    # combined_plot = input("Do you want to plot combined figures with separate axes - without Quantization? (yes/no): ").strip().lower() == 'yes'
+    # Combined plot option
+    combined_plot = input("Do you want to plot combined figures with separate axes - without Quantization? (yes/no): ").strip().lower() == 'yes'
 
-    # # Plot results
-    # if combined_plot:
-    #     # # Plotter - Ptmax
-    #     plotter_rate_combined = Plotter(x_val, rate_series, x_type='Ptmax', plot_type='Data Rate', smooth=False, combined_plot=True) # x_type='Ptmax'
-    #     plotter_energy_combined = Plotter(x_val, energy_series, x_type='Ptmax', plot_type='Energy Efficiency', smooth=False, combined_plot=True) # x_type='Ptmax'
+    # Plot results
+    if combined_plot:
+        # # Plotter - Ptmax
+        plotter_rate_combined = Plotter(x_val, rate_series, x_type='Ptmax', plot_type='Data Rate', smooth=False, combined_plot=True) # x_type='Ptmax'
+        plotter_energy_combined = Plotter(x_val, energy_series, x_type='Ptmax', plot_type='Energy Efficiency', smooth=False, combined_plot=True) # x_type='Ptmax'
         
-    #     # # Plotter - N
-    #     # plotter_rate_combined = Plotter(x_val, rate_series, x_type='N', plot_type='Data Rate', smooth=False, combined_plot=True)
-    #     # plotter_energy_combined = Plotter(x_val, energy_series, x_type='N', plot_type='Energy Efficiency', smooth=False, combined_plot=True)
+        # # Plotter - N
+        # plotter_rate_combined = Plotter(x_val, rate_series, x_type='N', plot_type='Data Rate', smooth=False, combined_plot=True)
+        # plotter_energy_combined = Plotter(x_val, energy_series, x_type='N', plot_type='Energy Efficiency', smooth=False, combined_plot=True)
         
-    #     # # Plotter - PRmax
-    #     # plotter_rate_combined = Plotter(x_val, rate_series, x_type='PRmax', plot_type='Data Rate', smooth=False, combined_plot=True) # x_type='PRmax'
-    #     # plotter_energy_combined = Plotter(x_val, energy_series, x_type='PRmax', plot_type='Energy Efficiency', smooth=False, combined_plot=True) # x_type='PRmax'
+        # # Plotter - PRmax
+        # plotter_rate_combined = Plotter(x_val, rate_series, x_type='PRmax', plot_type='Data Rate', smooth=False, combined_plot=True) # x_type='PRmax'
+        # plotter_energy_combined = Plotter(x_val, energy_series, x_type='PRmax', plot_type='Energy Efficiency', smooth=False, combined_plot=True) # x_type='PRmax'
         
-    #     # # Plotter - Pcn
-    #     # plotter_energy_combined = Plotter(x_val, energy_series, x_type='Pcn', plot_type='Energy Efficiency', smooth=False, combined_plot=True)
+        # # Plotter - Pcn
+        # plotter_energy_combined = Plotter(x_val, energy_series, x_type='Pcn', plot_type='Energy Efficiency', smooth=False, combined_plot=True)
         
-    #     # # Plotter - a
-    #     # plotter_energy_combined = Plotter(x_val, energy_series, x_type='a', plot_type='Energy Efficiency', smooth=False, combined_plot=True)
+        # # Plotter - a
+        # plotter_energy_combined = Plotter(x_val, energy_series, x_type='a', plot_type='Energy Efficiency', smooth=False, combined_plot=True)
         
-    #     # # Plotter - NEV
-    #     # plotter_rate_combined = Plotter(x_val, rate_series, x_type='NEV', plot_type='Data Rate', smooth=False, combined_plot=True)
-    #     # plotter_energy_combined = Plotter(x_val, energy_series, x_type='NEV', plot_type='Energy Efficiency', smooth=False, combined_plot=True)
-        
-        
-    #     # # Plot results - Ptmax
-    #     plotter_rate_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_Ptmax_0dB') # save_path='data/figures/SSR_figs'
-    #     plotter_energy_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_Ptmax_0dB') # save_path='data/figures/SEE_figs'
-        
-    # #     # # plot_results - N
-    # #     # plotter_rate_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_N') # save_path='data/figures/SSR_figs', None
-    # #     # plotter_energy_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_N_0dB') # 'data/figures/SEE_figs', None
-        
-    # #     # # Plot results - PRmax
-    # #     # plotter_rate_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_PRmax_0dB') # save_path='data/figures/SSR_figs'
-    # #     # plotter_energy_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_PRmax_0dB') # save_path='data/figures/SEE_figs'
-        
-    # #     # # plot_results - Pcn
-    # #     # 'data/figures/SEE_figs'
-    # #     # plotter_energy_combined.plot_results(save_path='data/figures/TIF_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_Pcn') #'data/figures/SEE_figs', 'data/output_test/figs/'
-        
-        
-    # #     # # plot_results - a
-    # #     # plotter_energy_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_a') # 'data/figures/SEE_figs'
-        
-    # #     # # plot_results - NEV
-    # #     # plotter_rate_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_NEV') # save_path='data/figures/SSR_figs', None
-    # #     # plotter_energy_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_NEV') # 'data/figure
-        
-    # # else:
-    #     # # Plotter - Ptmax
-    #     plotter_rate = Plotter(x_val, rate_series, x_type='Ptmax', plot_type='Data Rate', smooth=False, combined_plot=False)
-    #     plotter_energy = Plotter(x_val, energy_series, x_type='Ptmax', plot_type='Energy Efficiency', smooth=False, combined_plot=False)
-        
-    #     # # plotter - N
-    #     # plotter_rate = Plotter(x_val, rate_series, x_type='N', plot_type='Data Rate', smooth=False, combined_plot=False)
-    #     # plotter_energy = Plotter(x_val, energy_series, x_type='N', plot_type='Energy Efficiency', smooth=False, combined_plot=False)
-        
-    #     # # Plotter - PRmax
-    #     # plotter_rate = Plotter(x_val, rate_series, x_type='PRmax', plot_type='Data Rate', smooth=True, combined_plot=False)
-    #     # plotter_energy = Plotter(x_val, energy_series, x_type='PRmax', plot_type='Energy Efficiency', smooth=True, combined_plot=False)
-        
-    #     # # plotter - Pcn
-    #     # plotter_energy = Plotter(x_val, energy_series, x_type='Pcn', plot_type='Energy Efficiency', smooth=False, combined_plot=False)
-        
-    #     # # plotter - a
-    #     # plotter_energy = Plotter(x_val, energy_series, x_type='a', plot_type='Energy Efficiency', smooth=True, combined_plot=False)
-        
-    #     # # plotter - NEV
-    #     # plotter_rate = Plotter(x_val, rate_series, x_type='NEV', plot_type='Data Rate', smooth=False, combined_plot=False)
-    #     # plotter_energy = Plotter(x_val, energy_series, x_type='NEV', plot_type='Energy Efficiency', smooth=True, combined_plot=False)
-        
-        # # # plot_results - Ptmax
-        # plotter_rate.plot_results(save_path='data/figures/TIF_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_Ptmax') # save_path='data/figures/SSR_figs'
-        # plotter_energy.plot_results(save_path='data/figures/TIF_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_Ptmax') # save_path='data/figures/SEE_figs'
+        # # Plotter - NEV
+        # plotter_rate_combined = Plotter(x_val, rate_series, x_type='NEV', plot_type='Data Rate', smooth=False, combined_plot=True)
+        # plotter_energy_combined = Plotter(x_val, energy_series, x_type='NEV', plot_type='Energy Efficiency', smooth=False, combined_plot=True)
+                
+        # # Plot results - Ptmax
+        plotter_rate_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_Ptmax_0dB') # save_path='data/figures/SSR_figs'
+        plotter_energy_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_Ptmax_0dB') # save_path='data/figures/SEE_figs'
         
     #     # # plot_results - N
-    #     # plotter_rate.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_N') # save_path='data/figures/SSR_figs'
-    #     # plotter_energy.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_N_0dB') # 'data/figures/SEE_figs', None
+    #     # plotter_rate_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_N') # save_path='data/figures/SSR_figs', None
+    #     # plotter_energy_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_N_0dB') # 'data/figures/SEE_figs', None
         
-    #     # # plot_results - PRmax
-    #     # plotter_rate.plot_results(save_path='data/figures/SSR_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_PRmax_0dB') # save_path='data/figures/SSR_figs'
-    #     # plotter_energy.plot_results(save_path='data/figures/SEE_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_PRmax_0dB') # save_path='data/figures/SEE_figs'
+    #     # # Plot results - PRmax
+    #     # plotter_rate_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_PRmax_0dB') # save_path='data/figures/SSR_figs'
+    #     # plotter_energy_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_PRmax_0dB') # save_path='data/figures/SEE_figs'
         
     #     # # plot_results - Pcn
-    #     # plotter_energy.plot_results(save_path='data/figures/TIF_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_Pcn_sCSI') # 'data/figures/SEE_figs'
+    #     # 'data/figures/SEE_figs'
+    #     # plotter_energy_combined.plot_results(save_path='data/figures/TIF_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_Pcn') #'data/figures/SEE_figs', 'data/output_test/figs/'
+        
         
     #     # # plot_results - a
-    #     'data/figures/SEE_figs'
-    #     # plotter_energy.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_a') # 'data/figures/SEE_figs'
+    #     # plotter_energy_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_a') # 'data/figures/SEE_figs'
         
     #     # # plot_results - NEV
-    #     # plotter_rate.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_NEV') # save_path='data/figures/SSR_figs'
-    #     # plotter_energy.plot_results(save_path='data/figures/TIF_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_NEV') # 'data/figures/SEE_figs', None
+    #     # plotter_rate_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_NEV') # save_path='data/figures/SSR_figs', None
+    #     # plotter_energy_combined.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_NEV') # 'data/figure
+        
+    else:
+        # # Plotter - Ptmax
+        plotter_rate = Plotter(x_val, rate_series, x_type='Ptmax', plot_type='Data Rate', smooth=True, combined_plot=False)
+        plotter_energy = Plotter(x_val, energy_series, x_type='Ptmax', plot_type='Energy Efficiency', smooth=True, combined_plot=False)
+        
+        # # plotter - N
+        # plotter_rate = Plotter(x_val, rate_series, x_type='N', plot_type='Data Rate', smooth=False, combined_plot=False)
+        # plotter_energy = Plotter(x_val, energy_series, x_type='N', plot_type='Energy Efficiency', smooth=False, combined_plot=False)
+        
+        # # Plotter - PRmax
+        # plotter_rate = Plotter(x_val, rate_series, x_type='PRmax', plot_type='Data Rate', smooth=True, combined_plot=False)
+        # plotter_energy = Plotter(x_val, energy_series, x_type='PRmax', plot_type='Energy Efficiency', smooth=True, combined_plot=False)
+        
+        # # plotter - Pcn
+        # plotter_energy = Plotter(x_val, energy_series, x_type='Pcn', plot_type='Energy Efficiency', smooth=False, combined_plot=False)
+        
+        # # plotter - a
+        # plotter_energy = Plotter(x_val, energy_series, x_type='a', plot_type='Energy Efficiency', smooth=True, combined_plot=False)
+        
+        # # plotter - NEV
+        # plotter_rate = Plotter(x_val, rate_series, x_type='NEV', plot_type='Data Rate', smooth=False, combined_plot=False)
+        # plotter_energy = Plotter(x_val, energy_series, x_type='NEV', plot_type='Energy Efficiency', smooth=True, combined_plot=False)
+        
+        # # plot_results - Ptmax
+        plotter_rate.plot_results(save_path='data/figures/TIF_revision_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_Ptmax') # save_path='data/figures/SSR_figs'
+        plotter_energy.plot_results(save_path='data/figures/TIF_revision_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_Ptmax') # save_path='data/figures/SEE_figs'
+        
+        # # plot_results - N
+        # plotter_rate.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_N') # save_path='data/figures/SSR_figs'
+        # plotter_energy.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_N_0dB') # 'data/figures/SEE_figs', None
+        
+        # # plot_results - PRmax
+        # plotter_rate.plot_results(save_path='data/figures/SSR_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_PRmax_0dB') # save_path='data/figures/SSR_figs'
+        # plotter_energy.plot_results(save_path='data/figures/SEE_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_PRmax_0dB') # save_path='data/figures/SEE_figs'
+        
+        # # plot_results - Pcn
+        # plotter_energy.plot_results(save_path='data/figures/TIF_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_Pcn_sCSI') # 'data/figures/SEE_figs'
+        
+        # # plot_results - a
+        'data/figures/SEE_figs'
+        # plotter_energy.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_a') # 'data/figures/SEE_figs'
+        
+        # # plot_results - NEV
+        # plotter_rate.plot_results(save_path=None, formats=['eps', 'png', 'pdf'], fig_name='figure_SSR_Vs_NEV') # save_path='data/figures/SSR_figs'
+        # plotter_energy.plot_results(save_path='data/figures/TIF_figs', formats=['eps', 'png', 'pdf'], fig_name='figure_SEE_Vs_NEV') # 'data/figures/SEE_figs', None
     
     # Keep the figures open
     plt.ioff()
     plt.show()
     
-    # Initialize system configuration
-    config = SystemConfig()
+    # # Initialize system configuration
+    # config = SystemConfig()
     
-    # Load the results
-    results = np.load(config.OUTPUT_FILE, allow_pickle=True)['arr_0'].item()
+    # # Load the results
+    # results = np.load(config.OUTPUT_FILE, allow_pickle=True)['arr_0'].item()
 
-    # Extract data for plotting
-    x_val = results['x_val']
-    data_series = results['data_series']
+    # # Extract data for plotting
+    # x_val = results['x_val']
+    # data_series = results['data_series']
 
-    # Plot results
-    Plotter.plot_results(x_val, data_series, x_type='power', plot_type='Data Rate', smooth=True)
-    Plotter.plot_results(x_val, data_series, x_type='ris_elements', plot_type='Energy Efficiency', smooth=True)
+    # # Plot results
+    # Plotter.plot_results(x_val, data_series, x_type='power', plot_type='Data Rate', smooth=True)
+    # Plotter.plot_results(x_val, data_series, x_type='ris_elements', plot_type='Energy Efficiency', smooth=True)
 
     # # Example data for testing
     # x_val = np.linspace(0, 10, 100)
